@@ -2,11 +2,11 @@ pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 import "./libraries/Ownable.sol";
 import "./libraries/SafeMath.sol";
-import "./libraries/IERC20.sol";
 import "./libraries/Address.sol";
 import "./libraries/ReentrancyGuard.sol";
+import "./interfaces/IERC20.sol";
 
-contract Launchpad is Ownable, ReentrancyGuard {
+contract LaunchpadETH is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     using Address for address payable;
 
@@ -26,13 +26,14 @@ contract Launchpad is Ownable, ReentrancyGuard {
     address public presaleToken;
     uint256 public start;
     uint256 public end;
-
+    
     uint256 public minEccHold = 150000 * 10**9;
     address public minTokenHold;
 
     uint256 public presaleMin = 1 * 10**15;
     uint256 public presaleMax = 1 * 10**18;
 
+    uint256 public softCapAmount = 1 * 10**18; //300 ETH
     uint256 public hardCapAmount = 1 * 10**18; //300 ETH
 
     uint256 public poolRate = 10000; //10 per 0.001
@@ -46,8 +47,20 @@ contract Launchpad is Ownable, ReentrancyGuard {
         _;
     }
 
-    constructor(address token) { 
+
+    //LaunchpadETH
+    address public newOwner;
+    uint256 public percentToLP; //1000 = 1%
+    uint256 public LPLockTime; //in seconds 
+    uint256 public timeToRunPresale; //in seconds 
+    bool public lpAdded = false;
+    address public router;
+
+    constructor(address token, address _newOwner, uint256 _LPLockTime, uint256 _timeToRunPresale) { 
         presaleToken = token;
+        newOwner = _newOwner;
+        LPLockTime = _LPLockTime;
+        timeToRunPresale = _timeToRunPresale;
     }
 
     function addWhitelistedAddressesWithAmount(
@@ -201,10 +214,7 @@ contract Launchpad is Ownable, ReentrancyGuard {
         refundEnabled = _refund;
     }
 
-    function updateWhitelistOnly(bool _onlyWhitelistedAddressesAllowed)
-        public
-        onlyOwner
-    {
+    function updateWhitelistOnly(bool _onlyWhitelistedAddressesAllowed) public onlyOwner {
         onlyWhitelistedAddressesAllowed = _onlyWhitelistedAddressesAllowed;
     }
 
@@ -218,5 +228,15 @@ contract Launchpad is Ownable, ReentrancyGuard {
 
     function completePresale() public onlyOwner {
         payable(msg.sender).sendValue(address(this).balance);
+
+        //add liquidity
+
+        // if empiredex 
+
+        // else 
+          // lock liquidity in empire locker 
+
+        //open presale to claim
+        claimEnabled = true;
     }
 }
