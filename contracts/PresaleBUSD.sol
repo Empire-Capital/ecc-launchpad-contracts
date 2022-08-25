@@ -1,5 +1,6 @@
-pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
+pragma solidity 0.8.4;
+
 import "./libraries/Ownable.sol";
 import "./libraries/SafeMath.sol";
 import "./libraries/Address.sol";
@@ -13,8 +14,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     using Address for address payable;
 
     /* Defining Initial Parameters */
-    mapping(address => uint256) public accounting_contribution;
-    mapping(address => uint256) public presale_contribution;
+    mapping(address => uint256) public accountingContribution;
+    mapping(address => uint256) public presaleContribution;
     mapping(address => uint256) public totalPurchased;
 
     bool public claimEnabled = false;
@@ -22,9 +23,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     uint256 public currentPoolAmount = 0;
     uint256 public currentPoolParticipants = 0;
 
-    address public idoToken;
     uint256 public start;
     uint256 public end;
+    address public sellToken;
     address public depositToken = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56; //BUSD 18 DECIMALS
 
     uint256 public presaleMin = 2000 * 10**18; //2K
@@ -32,7 +33,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     uint256 public hardCapAmount = 125000 * 10**18; //125K
 
-    uint256 public poolRate = 31; //31 Tokens per $1 BUSD
+    uint256 public sellRate = 31; //31 Tokens per $1 BUSD
     uint256 public poolDecimals = 9; //If REKT token is 9 decimals
 
     function updateCrossChainBalances(
@@ -41,30 +42,30 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     ) external onlyOwner {
         //Transfer USDC to contract manually from BSC
         for (uint256 i = 0; i < _address.length; i++) {
-            if (presale_contribution[_address[i]] == 0) {
+            if (presaleContribution[_address[i]] == 0) {
                 currentPoolParticipants = currentPoolParticipants.add(1);
             }
 
-            accounting_contribution[_address[i]] = accounting_contribution[
+            accountingContribution[_address[i]] = accountingContribution[
                 _address[i]
             ].add(_amount[i]);
-            presale_contribution[_address[i]] = presale_contribution[
+            presaleContribution[_address[i]] = presaleContribution[
                 _address[i]
             ].add(_amount[i]);
-            totalPurchased[_address[i]] = presale_contribution[_address[i]];
+            totalPurchased[_address[i]] = presaleContribution[_address[i]];
             currentPoolAmount = currentPoolAmount.add(_amount[i]);
         }
     }
 
-    function deposit(uint256 amount) external nonReentrant {
-        uint256 value = amount;
-        // require(msg.value <= whitelistedAddressesAmount[msg.sender] || !onlyWhitelistedAddressesAllowed, "Must deposit the amount bid.");
+    function deposit(uint256 _amount) external nonReentrant {
+        uint256 value = _amount;
+        // require(msg.value <= whitelistedAddressesAmount[msg.sender] || !onlyWhitelistedAddressesAllowed, "Must deposit the amount bs.");
         require(
-            value.add(presale_contribution[msg.sender]) >= presaleMin,
+            value.add(presaleContribution[msg.sender]) >= presaleMin,
             "Per user limit min"
         );
         require(
-            value.add(presale_contribution[msg.sender]) <= presaleMax,
+            value.add(presaleContribution[msg.sender]) <= presaleMax,
             "Per user limit max"
         );
 
@@ -79,31 +80,31 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         IERC20(depositToken).safeTransferFrom(
             msg.sender,
             address(this),
-            amount
+            _amount
         );
 
-        if (presale_contribution[msg.sender] == 0) {
+        if (presaleContribution[msg.sender] == 0) {
             currentPoolParticipants = currentPoolParticipants.add(1);
         }
 
         //Record and account the USDC entered into presale
-        accounting_contribution[msg.sender] = accounting_contribution[
+        accountingContribution[msg.sender] = accountingContribution[
             msg.sender
         ].add(value);
-        presale_contribution[msg.sender] = presale_contribution[msg.sender].add(
+        presaleContribution[msg.sender] = presaleContribution[msg.sender].add(
             value
         );
-        totalPurchased[msg.sender] = presale_contribution[msg.sender];
+        totalPurchased[msg.sender] = presaleContribution[msg.sender];
         currentPoolAmount = currentPoolAmount.add(value);
     }
 
     function getStakers(address _user) external view returns (uint256) {
-        uint256 amount = presale_contribution[_user];
+        uint256 amount = presaleContribution[_user];
         return amount;
     }
 
     function getPendingToken(address _user) external view returns (uint256) {
-        uint256 token = presale_contribution[_user].mul(poolRate).div(
+        uint256 token = presaleContribution[_user].mul(sellRate).div(
             poolDecimals
         );
         return token;
@@ -121,12 +122,12 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         require(claimEnabled == true, "Claim not enabled");
         require(refundEnabled == false, "Refund must not be enabled");
 
-        address _user = msg.sender;
-        uint256 currentAmount = presale_contribution[_user];
+        address user = msg.sender;
+        uint256 currentAmount = presaleContribution[user];
         require(currentAmount > 0, "Invalid amount");
-        uint256 token = currentAmount.mul(poolRate).div(poolDecimals);
-        IERC20(idoToken).safeTransfer(_user, token);
-        presale_contribution[_user] = 0;
+        uint256 amount = currentAmount.mul(sellRate).div(poolDecimals);
+        IERC20(sellToken).safeTransfer(user, amount);
+        presaleContribution[user] = 0;
     }
 
     function refund() public nonReentrant {
@@ -134,11 +135,11 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         require(claimEnabled == false, "Claim must not be enabled");
 
         //Refund BUSD
-        address _user = msg.sender;
-        uint256 currentAmount = presale_contribution[_user];
+        address user = msg.sender;
+        uint256 currentAmount = presaleContribution[user];
         require(currentAmount > 0, "Invalid amount");
         IERC20(depositToken).safeTransfer(msg.sender, currentAmount);
-        presale_contribution[_user] = 0;
+        presaleContribution[user] = 0;
     }
 
     function setupPresale() external onlyOwner {
@@ -155,16 +156,16 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         hardCapAmount = _hardCapAmount;
     }
 
-    function updateIdoToken(address _idoAddress) external onlyOwner {
-        idoToken = _idoAddress;
+    function updateSellToken(address _sellTokenAddress) external onlyOwner {
+        sellToken = _sellTokenAddress;
     }
 
     function updateDepositToken(address _depositToken) external onlyOwner {
         depositToken = _depositToken;
     }
 
-    function updatePoolRate(uint256 _poolRate) external onlyOwner {
-        poolRate = _poolRate;
+    function updateSellRate(uint256 _sellRate) external onlyOwner {
+        sellRate = _sellRate;
     }
 
     function updatePoolDecimals(uint256 _poolDecimals) external onlyOwner {
