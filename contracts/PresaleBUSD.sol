@@ -14,14 +14,12 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     using Address for address payable;
 
     /* Defining Initial Parameters */
-    mapping(address => uint256) public accountingContribution;
     mapping(address => uint256) public presaleContribution;
-    mapping(address => uint256) public totalPurchased;
 
     bool public claimEnabled = false;
     bool public refundEnabled = false;
-    uint256 public currentPoolAmount;
-    uint256 public currentPoolParticipants;
+    uint256 public currentDepositAmount;
+    uint256 public currentPresaleParticipants;
 
     uint256 public start;
     uint256 public end;
@@ -33,7 +31,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     uint256 public presaleMax;
     uint256 public hardCapAmount;
 
-    uint256 public sellRate = 31; //31 Tokens per $1 BUSD
+    uint256 public sellRate;
 
     constructor(address _depositToken, address _sellToken) {
         depositToken = _depositToken;
@@ -54,16 +52,14 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         address[] calldata _address,
         uint256[] calldata _amount
     ) external onlyOwner {
-        //Transfer USDC to contract manually from BSC
+        //Transfer depositToken to contract manually from other chain
         for (uint256 i = 0; i < _address.length; i++) {
             if (presaleContribution[_address[i]] == 0) {
-                currentPoolParticipants++;
+                currentPresaleParticipants++;
             }
 
-            accountingContribution[_address[i]] += _amount[i];
             presaleContribution[_address[i]] += _amount[i];
-            totalPurchased[_address[i]] = presaleContribution[_address[i]];
-            currentPoolAmount += _amount[i];
+            currentDepositAmount += _amount[i];
         }
     }
 
@@ -80,13 +76,13 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         );
 
         require(
-            value + currentPoolAmount <= hardCapAmount,
+            value + currentDepositAmount <= hardCapAmount,
             "No more deposit allowed. Presale is full"
         );
         require(start < block.timestamp, "Must meet requirements");
         require(end > block.timestamp, "Presale Ended");
 
-        //Transfer USDC from the participant to the contract
+        //Transfer depositToken from the participant to the contract
         IERC20(depositToken).safeTransferFrom(
             msg.sender,
             address(this),
@@ -94,14 +90,12 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         );
 
         if (presaleContribution[msg.sender] == 0) {
-            currentPoolParticipants++;
+            currentPresaleParticipants++;
         }
 
-        //Record and account the USDC entered into presale
-        accountingContribution[msg.sender] += value;
+        //Record and account the depositToken entered into presale
         presaleContribution[msg.sender] += value;
-        totalPurchased[msg.sender] = presaleContribution[msg.sender];
-        currentPoolAmount += value;
+        currentDepositAmount += value;
     }
 
     function getStakers(address _user) external view returns (uint256) {
@@ -144,9 +138,10 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         require(currentAmount > 0, "Invalid amount");
         IERC20(depositToken).safeTransfer(msg.sender, currentAmount);
         presaleContribution[user] = 0;
+        currentPresaleParticipants--;
     }
 
-    function setupPresale() external onlyOwner {
+    function startPresale() external onlyOwner {
         start = block.timestamp;
         end = block.timestamp + 1 days;
     }
