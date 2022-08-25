@@ -48,24 +48,10 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     receive() external payable {}
 
-    function updateCrossChainBalances(
-        address[] calldata _address,
-        uint256[] calldata _amount
-    ) external onlyOwner {
-        //Transfer depositToken to contract manually from other chain
-        for (uint256 i = 0; i < _address.length; i++) {
-            if (presaleContribution[_address[i]] == 0) {
-                currentPresaleParticipants++;
-            }
-
-            presaleContribution[_address[i]] += _amount[i];
-            currentDepositAmount += _amount[i];
-        }
-    }
+    // User Functions
 
     function deposit(uint256 _amount) external nonReentrant {
         uint256 value = _amount;
-        // require(msg.value <= whitelistedAddressesAmount[msg.sender] || !onlyWhitelistedAddressesAllowed, "Must deposit the amount bs.");
         require(
             value + presaleContribution[msg.sender] >= presaleMin,
             "Per user limit min"
@@ -74,13 +60,15 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
             value + presaleContribution[msg.sender] <= presaleMax,
             "Per user limit max"
         );
-
         require(
             value + currentDepositAmount <= hardCapAmount,
             "No more deposit allowed. Presale is full"
         );
-        require(start < block.timestamp, "Must meet requirements");
-        require(end > block.timestamp, "Presale Ended");
+        require(start < block.timestamp, "Presale not started");
+        require(end > block.timestamp, "Presale ended");
+
+        // require(msg.value <= whitelistedAddressesAmount[msg.sender] || !onlyWhitelistedAddressesAllowed, "Must deposit the amount bs.");
+
 
         //Transfer depositToken from the participant to the contract
         IERC20(depositToken).safeTransferFrom(
@@ -96,24 +84,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         //Record and account the depositToken entered into presale
         presaleContribution[msg.sender] += value;
         currentDepositAmount += value;
-    }
-
-    function getStakers(address _user) external view returns (uint256) {
-        uint256 amount = presaleContribution[_user];
-        return amount;
-    }
-
-    function getPendingToken(address _user) external view returns (uint256) {
-        uint256 token = presaleContribution[_user] * sellRate / sellTokenDecimals;
-        return token;
-    }
-
-    function getCanClaimUI() external view returns (bool) {
-        return claimEnabled;
-    }
-
-    function getCanRefundUI() external view returns (bool) {
-        return refundEnabled;
     }
 
     function claim() external nonReentrant {
@@ -141,15 +111,62 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         currentPresaleParticipants--;
     }
 
+    // Admin: Presale Functions
+
     function startPresale() external onlyOwner {
         start = block.timestamp;
         end = block.timestamp + 1 days;
+    }
+
+    function completePresale(
+        address _tokenAddr,
+        address _to,
+        uint256 _amount
+    ) external onlyOwner {
+        IERC20(_tokenAddr).safeTransfer(_to, _amount);
     }
 
     function newRound(uint256 duration) external onlyOwner {
         start = block.timestamp;
         end = block.timestamp + duration;
     }
+
+    function updateCrossChainBalances(
+        address[] calldata _address,
+        uint256[] calldata _amount
+    ) external onlyOwner {
+        //Transfer depositToken to contract manually from other chain
+        for (uint256 i = 0; i < _address.length; i++) {
+            if (presaleContribution[_address[i]] == 0) {
+                currentPresaleParticipants++;
+            }
+
+            presaleContribution[_address[i]] += _amount[i];
+            currentDepositAmount += _amount[i];
+        }
+    }
+
+    // View Functions
+
+    function getStakers(address _user) external view returns (uint256) {
+        uint256 amount = presaleContribution[_user];
+        return amount;
+    }
+
+    function getPendingToken(address _user) external view returns (uint256) {
+        uint256 token = presaleContribution[_user] * sellRate / sellTokenDecimals;
+        return token;
+    }
+
+    function getCanClaimUI() external view returns (bool) {
+        return claimEnabled;
+    }
+
+    function getCanRefundUI() external view returns (bool) {
+        return refundEnabled;
+    }
+
+    // Admin: Update Functions
 
     function updateHardCapRate(uint256 _hardCapAmount) external onlyOwner {
         hardCapAmount = _hardCapAmount;
@@ -193,14 +210,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     function updateRefund(bool _refund) external onlyOwner {
         refundEnabled = _refund;
-    }
-
-    function completePresale(
-        address _tokenAddr,
-        address _to,
-        uint256 _amount
-    ) external onlyOwner {
-        IERC20(_tokenAddr).safeTransfer(_to, _amount);
     }
 
     function recoverNative() external onlyOwner {
