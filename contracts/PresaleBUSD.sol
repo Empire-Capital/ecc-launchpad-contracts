@@ -20,21 +20,35 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     bool public claimEnabled = false;
     bool public refundEnabled = false;
-    uint256 public currentPoolAmount = 0;
-    uint256 public currentPoolParticipants = 0;
+    uint256 public currentPoolAmount;
+    uint256 public currentPoolParticipants;
 
     uint256 public start;
     uint256 public end;
+    address public depositToken; // 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56 BUSD
     address public sellToken;
-    address public depositToken = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56; //BUSD 18 DECIMALS
+    uint256 public sellTokenDecimals;
 
-    uint256 public presaleMin = 2000 * 10**18; //2K
-    uint256 public presaleMax = 125000 * 10**18; //125K
-
-    uint256 public hardCapAmount = 125000 * 10**18; //125K
+    uint256 public presaleMin;
+    uint256 public presaleMax;
+    uint256 public hardCapAmount;
 
     uint256 public sellRate = 31; //31 Tokens per $1 BUSD
-    uint256 public poolDecimals = 9; //If REKT token is 9 decimals
+
+    constructor(address _depositToken, address _sellToken) {
+        depositToken = _depositToken;
+        sellToken = _sellToken;
+        sellTokenDecimals = IERC20(sellToken).decimals();
+
+        uint256 depositTokenDecimals = IERC20(depositToken).decimals();
+        presaleMin = 2000 * 10**depositTokenDecimals; //2K
+        presaleMax = 125000 * 10**depositTokenDecimals; //125K
+        hardCapAmount = 125000 * 10**depositTokenDecimals; //125K
+
+        sellRate = 31; //31 Tokens per 1 BUSD
+    }
+
+    receive() external payable {}
 
     function updateCrossChainBalances(
         address[] calldata _address,
@@ -96,7 +110,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     }
 
     function getPendingToken(address _user) external view returns (uint256) {
-        uint256 token = presaleContribution[_user] * sellRate / poolDecimals;
+        uint256 token = presaleContribution[_user] * sellRate / sellTokenDecimals;
         return token;
     }
 
@@ -115,7 +129,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         address user = msg.sender;
         uint256 currentAmount = presaleContribution[user];
         require(currentAmount > 0, "Invalid amount");
-        uint256 amount = currentAmount * sellRate / poolDecimals;
+        uint256 amount = currentAmount * sellRate / sellTokenDecimals;
         IERC20(sellToken).safeTransfer(user, amount);
         presaleContribution[user] = 0;
     }
@@ -158,8 +172,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         sellRate = _sellRate;
     }
 
-    function updatePoolDecimals(uint256 _poolDecimals) external onlyOwner {
-        poolDecimals = _poolDecimals;
+    function updateSellTokenDecimals(uint256 _sellTokenDecimals) external onlyOwner {
+        sellTokenDecimals = _sellTokenDecimals;
     }
 
     function updateMin(uint256 _poolmin) external onlyOwner {
