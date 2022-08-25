@@ -43,17 +43,13 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         //Transfer USDC to contract manually from BSC
         for (uint256 i = 0; i < _address.length; i++) {
             if (presaleContribution[_address[i]] == 0) {
-                currentPoolParticipants = currentPoolParticipants.add(1);
+                currentPoolParticipants++;
             }
 
-            accountingContribution[_address[i]] = accountingContribution[
-                _address[i]
-            ].add(_amount[i]);
-            presaleContribution[_address[i]] = presaleContribution[
-                _address[i]
-            ].add(_amount[i]);
+            accountingContribution[_address[i]] += _amount[i];
+            presaleContribution[_address[i]] += _amount[i];
             totalPurchased[_address[i]] = presaleContribution[_address[i]];
-            currentPoolAmount = currentPoolAmount.add(_amount[i]);
+            currentPoolAmount += _amount[i];
         }
     }
 
@@ -61,16 +57,16 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         uint256 value = _amount;
         // require(msg.value <= whitelistedAddressesAmount[msg.sender] || !onlyWhitelistedAddressesAllowed, "Must deposit the amount bs.");
         require(
-            value.add(presaleContribution[msg.sender]) >= presaleMin,
+            value + presaleContribution[msg.sender] >= presaleMin,
             "Per user limit min"
         );
         require(
-            value.add(presaleContribution[msg.sender]) <= presaleMax,
+            value + presaleContribution[msg.sender] <= presaleMax,
             "Per user limit max"
         );
 
         require(
-            value.add(currentPoolAmount) <= hardCapAmount,
+            value + currentPoolAmount <= hardCapAmount,
             "No more deposit allowed. Presale is full"
         );
         require(start < block.timestamp, "Must meet requirements");
@@ -84,18 +80,14 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         );
 
         if (presaleContribution[msg.sender] == 0) {
-            currentPoolParticipants = currentPoolParticipants.add(1);
+            currentPoolParticipants++;
         }
 
         //Record and account the USDC entered into presale
-        accountingContribution[msg.sender] = accountingContribution[
-            msg.sender
-        ].add(value);
-        presaleContribution[msg.sender] = presaleContribution[msg.sender].add(
-            value
-        );
+        accountingContribution[msg.sender] += value;
+        presaleContribution[msg.sender] += value;
         totalPurchased[msg.sender] = presaleContribution[msg.sender];
-        currentPoolAmount = currentPoolAmount.add(value);
+        currentPoolAmount += value;
     }
 
     function getStakers(address _user) external view returns (uint256) {
@@ -104,9 +96,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     }
 
     function getPendingToken(address _user) external view returns (uint256) {
-        uint256 token = presaleContribution[_user].mul(sellRate).div(
-            poolDecimals
-        );
+        uint256 token = presaleContribution[_user] * sellRate / poolDecimals;
         return token;
     }
 
@@ -125,7 +115,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         address user = msg.sender;
         uint256 currentAmount = presaleContribution[user];
         require(currentAmount > 0, "Invalid amount");
-        uint256 amount = currentAmount.mul(sellRate).div(poolDecimals);
+        uint256 amount = currentAmount * sellRate / poolDecimals;
         IERC20(sellToken).safeTransfer(user, amount);
         presaleContribution[user] = 0;
     }
