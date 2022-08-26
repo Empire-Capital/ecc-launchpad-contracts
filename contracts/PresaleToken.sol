@@ -13,9 +13,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address payable;
 
-    /* Defining Initial Parameters */
-    mapping(address => uint256) public presaleContribution;
-
     enum Status {
         beforeSale,
         duringSale,
@@ -33,18 +30,16 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     uint256 public currentPresaleParticipants;
     uint256 public start;
     uint256 public end;
-
     uint256 public presaleMin;
-
     uint256 public softCapAmount;
     uint256 public hardCapAmount;
     uint256 public sellRate;
-
     uint256 public requireTokenAmount;
     address public requireToken;
     bool public requireTokenStatus;
-
     bool public crossChainPresale;
+
+    mapping(address => uint256) public presaleContribution;
 
     constructor(address _depositToken, address _sellToken) {
         depositToken = _depositToken;
@@ -55,7 +50,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         presaleMin = 2000 * 10**depositTokenDecimals; // 2K
         hardCapAmount = 125000 * 10**depositTokenDecimals; // 125K
 
-        sellRate = 1; // X Tokens per 1 depositToken
+        sellRate = 1; // X sellToken per 1 depositToken
         projectAdminAddress = 0x0000000000000000000000000000000000000000; // admin of presale project
 
         requireTokenAmount = 150000 * 10**18; // 150K
@@ -67,8 +62,12 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     receive() external payable {}
 
-    // User Functions
+    /*//////////////////////////////////////////////////////////////
+                            USER FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
+    /// @notice Enters the presale
+    /// @param _amount The amount of tokens to be deposited into the presale
     function deposit(uint256 _amount) external nonReentrant {
         uint256 value = _amount;
         address user = msg.sender;
@@ -101,6 +100,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         currentDepositAmount += value;
     }
 
+    /// @notice Claims tokens after the presale is finished
     function claim() external nonReentrant {
         require(status == Status.afterSaleSuccess, "Presale is still active");
 
@@ -112,6 +112,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         presaleContribution[user] = 0;
     }
 
+    /// @notice Claims a refund if presale is still active or soft cap was not reached
     function refund() public nonReentrant {
         require(status == Status.duringSale ||
                 status == Status.afterSaleFailure, "Presale finished successfully");
@@ -125,14 +126,20 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         currentPresaleParticipants--;
     }
 
-    // Admin: Presale Functions
+    /*//////////////////////////////////////////////////////////////
+                        ADMIN: PRESALE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
+    /// @notice Starts the presale
+    /// @param presaleHours The amount of hours the presale will last for
     function startPresale(uint256 presaleHours) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         start = block.timestamp;
         end = block.timestamp + (presaleHours * 1 hours);
     }
 
+    /// @notice Ends the presale, preventing new deposits and allowing claims/refunds based on soft cap being met
+    /// @dev raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to admin
     function completePresale() external onlyOwner {
         require(status == Status.duringSale, "Presale is not active");
 
@@ -156,12 +163,17 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         }
     }
 
+    /// @notice Extends the presale
+    /// @param _end The new end time for the presale
     function extendPresale(uint256 _end) external onlyOwner {
         require(_end > end, "New end time must be after current end");
         require(status == Status.duringSale, "Presale must be active");
         end = _end;
     }
 
+    /// @notice Updates the amount of tokens an address contributed in the presale on another chain
+    /// @param _address The array of addresses
+    /// @param _amount The array of contribution amount the addresses
     function updateCrossChainBalances(
         address[] calldata _address,
         uint256[] calldata _amount
@@ -180,7 +192,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         }
     }
 
-    // View Functions
+    /*//////////////////////////////////////////////////////////////
+                            VIEW FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function getSaleStatus() external view returns (Status) {
         return status;
@@ -206,42 +220,58 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         return (start, end, softCapAmount, hardCapAmount, presaleMin);
     }
 
-    // Admin: Update Functions
+    /*//////////////////////////////////////////////////////////////
+                        ADMIN: UPDATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
+    /// @notice Updates the soft cap for the presale
+    /// @param _softCapAmount The new soft cap for the presale
     function updateSoftCapAmount(uint256 _softCapAmount) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         softCapAmount = _softCapAmount;
     }
 
+    /// @notice Updates the hard cap for the presale
+    /// @param _hardCapAmount The new hard cap for the presale
     function updateHardCapAmount(uint256 _hardCapAmount) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         hardCapAmount = _hardCapAmount;
     }
 
-    function updateSellToken(
-        address _sellTokenAddress,
-        uint256 _sellTokenDecimals)
-        external onlyOwner {
+    /// @notice Updates the token that is sold in the presale
+    /// @param _sellTokenAddress The address of the new token to be sold
+    function updateSellToken(address _sellTokenAddress) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         sellToken = _sellTokenAddress;
-        sellTokenDecimals = _sellTokenDecimals;
+        sellTokenDecimals = IERC20(sellToken).decimals();
     }
 
+    /// @notice Updates the token to be deposited into the presale
+    /// @param _depositToken The address of the new token to be deposited
     function updateDepositToken(address _depositToken) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         depositToken = _depositToken;
     }
 
+    /// @notice Updates the sell rate between depositToken and sellToken
+    /// @dev At sellRate = 10, then 1 depositToken returns 10 sellToken
+    /// @param _sellRate The new sellRate
     function updateSellRate(uint256 _sellRate) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         sellRate = _sellRate;
     }
 
+    /// @notice Updates the minimum amount of tokens needed to join the presale
+    /// @param _poolmin Thew new minimum amount of tokens
     function updateMin(uint256 _poolmin) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         presaleMin = _poolmin;
     }
 
+    /// @notice Changes The variables for the require token to be held to join the presale
+    /// @param _amount New amount of tokens required to be held
+    /// @param _token The new token that needs to be held
+    /// @param _status Toggles if there is a required token to be held
     function updateRequiredToken(uint256 _amount, address _token, bool _status) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         requireTokenAmount = _amount;
@@ -249,6 +279,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         requireTokenStatus = _status;
     }
 
+    /// @notice Transfers any native coin stuck on the contract
     function recoverNative() external onlyOwner {
         payable(msg.sender).sendValue(address(this).balance);
     }
