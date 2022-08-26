@@ -43,14 +43,14 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     constructor(address _depositToken, address _sellToken) {
         depositToken = _depositToken;
+        uint256 depositTokenDecimals = IERC20(depositToken).decimals();
         sellToken = _sellToken;
         sellTokenDecimals = IERC20(sellToken).decimals();
 
-        uint256 depositTokenDecimals = IERC20(depositToken).decimals();
-        presaleMin = 2000 * 10**depositTokenDecimals; // 2K
-        hardCapAmount = 125000 * 10**depositTokenDecimals; // 125K
-
         sellRate = 1; // X sellToken per 1 depositToken
+        presaleMin = 1000 * 10**depositTokenDecimals; // 1K
+        softCapAmount = 100000 * 10*depositTokenDecimals; // 100K
+        hardCapAmount = 125000 * 10**depositTokenDecimals; // 125K
         projectAdminAddress = 0x0000000000000000000000000000000000000000; // admin of presale project
 
         requireTokenAmount = 150000 * 10**18; // 150K
