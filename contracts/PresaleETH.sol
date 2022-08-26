@@ -1,222 +1,268 @@
-pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
+pragma solidity 0.8.4;
+
 import "./libraries/Ownable.sol";
 import "./libraries/SafeMath.sol";
 import "./libraries/Address.sol";
 import "./libraries/ReentrancyGuard.sol";
+import "./libraries/SafeERC20.sol";
 import "./interfaces/IERC20.sol";
 
-contract PresaleETH is Ownable, ReentrancyGuard {
+contract PresaleBUSD is Ownable, ReentrancyGuard {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
     using Address for address payable;
 
     /* Defining Initial Parameters */
-    mapping(address => uint256) public accounting_contribution;
-    mapping(address => uint256) public presale_contribution;
-    mapping(address => uint256) public totalPurchased;
-    mapping(address => bool) public whitelistedAddresses;
-    mapping(address => uint256) public whitelistedAddressesAmount;
+    mapping(address => uint256) public presaleContribution;
 
-    bool public onlyWhitelistedAddressesAllowed = true;
-    bool public claimEnabled = false;
-    bool public refundEnabled = false;
-    uint256 public currentPoolAmount = 0;
-    uint256 public currentPoolParticipants = 0;
+    enum Status {
+        beforeSale,
+        duringSale,
+        afterSaleSuccess,
+        afterSaleFailure
+    }
 
-    address public presaleToken;
+    Status public status;
+
+    address public projectAdminAddress;
+    address public sellToken;
+    uint256 public sellTokenDecimals;
+    uint256 public currentDepositAmount;
+    uint256 public currentPresaleParticipants;
     uint256 public start;
     uint256 public end;
-    
-    uint256 public minEccHold = 150000 * 10**9;
-    address public minTokenHold;
+    uint256 public presaleMin;
+    uint256 public softCapAmount;
+    uint256 public hardCapAmount;
+    uint256 public sellRate;
+    uint256 public requireTokenAmount;
+    address public requireToken;
+    bool public requireTokenStatus;
+    bool public crossChainPresale;
 
-    uint256 public presaleMin = 1 * 10**15;
-    uint256 public presaleMax = 1 * 10**18;
+    constructor(address _sellToken) {
+        sellToken = _sellToken;
+        sellTokenDecimals = IERC20(sellToken).decimals();
 
-    uint256 public hardCapAmount = 1 * 10**18; //300 ETH
+        sellRate = 1; // X sellToken per 1 depositToken
+        presaleMin = 1000 * 10**18; // 1K
+        softCapAmount = 100000 * 10*18; // 100K
+        hardCapAmount = 125000 * 10**18; // 125K
+        projectAdminAddress = 0x0000000000000000000000000000000000000000; // admin of presale project
 
-    uint256 public poolRate = 10000; //10 per 0.001
+        requireTokenAmount = 150000 * 10**18; // 150K
+        requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
+        requireTokenStatus = false; // false = no requirements, true = holding token required to join
 
-    modifier whitelistedAddressOnly() {
-        require(
-            !onlyWhitelistedAddressesAllowed ||
-                whitelistedAddresses[msg.sender],
-            "Address not whitelisted"
-        );
-        _;
+        crossChainPresale = false; // false = presale on one chain, true = presale on multiple chains
     }
 
-    constructor(address token) { 
-        presaleToken = token;
-    }
+    receive() external payable {}
 
-    function addWhitelistedAddressesWithAmount(
-        address[] calldata _whitelistedAddresses,
-        uint256 amount
-    ) external onlyOwner {
-        onlyWhitelistedAddressesAllowed = _whitelistedAddresses.length > 0;
-        for (uint256 i = 0; i < _whitelistedAddresses.length; i++) {
-            whitelistedAddresses[_whitelistedAddresses[i]] = true;
-            whitelistedAddressesAmount[_whitelistedAddresses[i]] = amount;
-        }
-    }
+    /*//////////////////////////////////////////////////////////////
+                            USER FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
-    function addWhitelistedAddresses(address[] calldata _whitelistedAddresses)
-        external
-        onlyOwner
-    {
-        onlyWhitelistedAddressesAllowed = _whitelistedAddresses.length > 0;
-        for (uint256 i = 0; i < _whitelistedAddresses.length; i++) {
-            whitelistedAddresses[_whitelistedAddresses[i]] = true;
-        }
-    }
-
-    function deposit() public payable whitelistedAddressOnly nonReentrant {
+    /// @notice Enters the presale
+    function deposit() external payable nonReentrant {
         uint256 value = msg.value;
         address user = msg.sender;
-        // require(msg.value <= whitelistedAddressesAmount[msg.sender] || !onlyWhitelistedAddressesAllowed, "Must deposit the amount bid.");
         require(
-            value.add(presale_contribution[user]) <=
-                whitelistedAddressesAmount[user] ||
-                !onlyWhitelistedAddressesAllowed,
-            "Per user limit reached"
-        );
-
-        require(
-            onlyWhitelistedAddressesAllowed ||
-                value.add(presale_contribution[user]) >= presaleMin,
-            "Per user limit min"
+            value + presaleContribution[user] >= presaleMin,
+            "Must deposit more than presale minimum"
         );
         require(
-            onlyWhitelistedAddressesAllowed ||
-                value.add(presale_contribution[user]) <= presaleMax,
-            "Per user limit max"
-        );
-
-        require(
-            value.add(currentPoolAmount) <= hardCapAmount,
+            value + currentDepositAmount <= hardCapAmount,
             "No more deposit allowed. Presale is full"
         );
-        require(start < block.timestamp, "Must meet requirements");
-        require(end > block.timestamp, "Presale Ended");
+        require(status == Status.duringSale, "Presale is not active");
 
-        if (presale_contribution[user] == 0) {
-            currentPoolParticipants = currentPoolParticipants.add(1);
+        if (requireTokenStatus) {
+            require(IERC20(requireToken).balanceOf(user) > requireTokenAmount,
+            "User does not hold enough required tokens");
         }
 
-        accounting_contribution[user] = accounting_contribution[user].add(
-            value
-        );
-        presale_contribution[user] = presale_contribution[user].add(value);
-        totalPurchased[user] = presale_contribution[user];
-        currentPoolAmount = currentPoolAmount.add(value);
+        if (presaleContribution[user] == 0) {currentPresaleParticipants++;}
+
+        //Record and account the native coin entered into presale
+        presaleContribution[user] += value;
+        currentDepositAmount += value;
     }
 
-    function getStakers(address _user) public view returns (uint256) {
-        uint256 amount = presale_contribution[_user];
-        return amount;
+    /// @notice Claims tokens after the presale is finished
+    function claim() external nonReentrant {
+        require(status == Status.afterSaleSuccess, "Presale is still active");
+
+        address user = msg.sender;
+        uint256 currentAmount = presaleContribution[user];
+        require(currentAmount > 0, "Have not contributed to presale");
+        uint256 amount = currentAmount * sellRate / sellTokenDecimals;
+        IERC20(sellToken).safeTransfer(user, amount);
+        presaleContribution[user] = 0;
     }
 
-    function getPendingToken(address _user) public view returns (uint256) {
-        uint256 token = presale_contribution[_user].mul(poolRate);
-        return token;
+    /// @notice Claims a refund if presale is still active or soft cap was not reached
+    function refund() public nonReentrant {
+        require(status == Status.duringSale ||
+                status == Status.afterSaleFailure, "Presale finished successfully");
+
+        // Refund deposit tokens
+        address user = msg.sender;
+        uint256 currentAmount = presaleContribution[user];
+        require(currentAmount > 0, "Invalid amount");
+        payable(user).sendValue(currentAmount);
+        presaleContribution[user] = 0;
+        currentPresaleParticipants--;
     }
 
-    function getCanClaimUI() public view returns (bool) {
-        return claimEnabled;
-    }
+    /*//////////////////////////////////////////////////////////////
+                        ADMIN: PRESALE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
-    function getCanRefundUI() public view returns (bool) {
-        return refundEnabled;
-    }
-
-    function claim() public nonReentrant {
-        require(claimEnabled == true, "Claim not enabled");
-        require(refundEnabled == false, "Refund must not be enabled");
-
-        address _user = msg.sender;
-        uint256 currentAmount = presale_contribution[_user];
-        uint256 token = currentAmount.mul(poolRate);
-        presale_contribution[_user] = presale_contribution[_user].sub(
-            currentAmount
-        );
-
-        IERC20(presaleToken).transfer(_user, token);
-    }
-
-    function refund() external nonReentrant {
-        require(refundEnabled == true, "Not Allowed. Refund not enabled");
-        require(claimEnabled == false, "Claim must not be enabled");
-        require(presale_contribution[msg.sender] > 0, "Can not claim zero");
-        address _user = msg.sender;
-        uint256 currentAmount = presale_contribution[_user];
-        payable(_user).sendValue(currentAmount);
-
-        presale_contribution[_user] = 0;
-    }
-
-    function startPresale() public onlyOwner {
+    /// @notice Starts the presale
+    /// @param presaleHours The amount of hours the presale will last for
+    function startPresale(uint256 presaleHours) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
         start = block.timestamp;
-        end = block.timestamp + 1 days;
+        end = block.timestamp + (presaleHours * 1 days);
     }
 
-    function newRound(uint256 duration) public onlyOwner {
-        start = block.timestamp;
-        end = block.timestamp + duration;
+    /// @notice Ends the presale, preventing new deposits and allowing claims/refunds based on soft cap being met
+    /// @dev raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to admin
+    function completePresale() external onlyOwner {
+        require(status == Status.duringSale, "Presale is not active");
+
+        // If presale does not hit their soft cap
+        if (currentDepositAmount < softCapAmount) {
+            status = Status.afterSaleFailure;
+
+            uint256 unsoldTokens = IERC20(sellToken).balanceOf(address(this));
+            IERC20(sellToken).safeTransfer(projectAdminAddress, unsoldTokens);
+
+        // If presale hits their soft cap
+        } else {
+            status = Status.afterSaleSuccess;
+           
+            // Transfer deposited native coin from presale to projects admin address
+            payable(projectAdminAddress).sendValue(address(this).balance);
+
+            // Transfer tokens not sold in presale to projects admin address
+            uint256 unsoldTokens = currentDepositAmount * sellRate / sellTokenDecimals;
+            IERC20(sellToken).safeTransfer(projectAdminAddress, unsoldTokens);
+        }
     }
 
-    function updateHardCapRate(uint256 _hardCapAmount) public onlyOwner {
-        hardCapAmount = _hardCapAmount;
-    }
-
-    function updateIdoToken(address _idoAddress) public onlyOwner {
-        presaleToken = _idoAddress;
-    }
-
-    function updatePoolRate(uint256 _poolRate) public onlyOwner {
-        poolRate = _poolRate;
-    }
-
-    function updateMin(uint256 _poolmin) public onlyOwner {
-        presaleMin = _poolmin;
-    }
-
-    function updateMax(uint256 _poolmax) public onlyOwner {
-        presaleMax = _poolmax;
-    }
-
-    function updateStart(uint256 _start) public onlyOwner {
-        start = _start;
-    }
-
-    function updateEnd(uint256 _end) public onlyOwner {
+    /// @notice Extends the presale
+    /// @param _end The new end time for the presale
+    function extendPresale(uint256 _end) external onlyOwner {
+        require(_end > end, "New end time must be after current end");
+        require(status == Status.duringSale, "Presale must be active");
         end = _end;
     }
 
-    function updateCanClaim(bool _claim) public onlyOwner {
-        claimEnabled = _claim;
+    /// @notice Updates the amount of tokens an address contributed in the presale on another chain
+    /// @param _address The array of addresses
+    /// @param _amount The array of contribution amount the addresses
+    function updateCrossChainBalances(
+        address[] calldata _address,
+        uint256[] calldata _amount
+    ) external onlyOwner {
+        require(crossChainPresale, "Presale not cross chain");
+        require(status == Status.beforeSale ||
+                status == Status.duringSale, "Presale finished already");
+        //Transfer native coin to contract manually from other chain
+        for (uint256 i = 0; i < _address.length; i++) {
+            if (presaleContribution[_address[i]] == 0) {
+                currentPresaleParticipants++;
+            }
+
+            presaleContribution[_address[i]] += _amount[i];
+            currentDepositAmount += _amount[i];
+        }
     }
 
-    function updateRefund(bool _refund) public onlyOwner {
-        refundEnabled = _refund;
+    /*//////////////////////////////////////////////////////////////
+                            VIEW FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    function getSaleStatus() external view returns (Status) {
+        return status;
     }
 
-    function updateWhitelistOnly(bool _onlyWhitelistedAddressesAllowed)
-        public
-        onlyOwner
-    {
-        onlyWhitelistedAddressesAllowed = _onlyWhitelistedAddressesAllowed;
+    function getUserContribution(address _user) external view returns (uint256) {
+        return presaleContribution[_user];
     }
 
-    function recoverPresale(
-        address _tokenAddr,
-        address _to,
-        uint256 _amount
-    ) public onlyOwner {
-        IERC20(_tokenAddr).transfer(_to, _amount);
+    function getPendingToken(address _user) external view returns (uint256) {
+        return presaleContribution[_user] * sellRate / sellTokenDecimals;
     }
 
-    function completePresale() public onlyOwner {
-        payable(msg.sender).sendValue(address(this).balance);
+    function getDepositedTokens() external view returns (uint256) {
+        return currentDepositAmount;
     }
+
+    function getRequireTokenDetails() external view returns (uint256, address, bool) {
+        return (requireTokenAmount, requireToken, requireTokenStatus);
+    }
+
+    function getPresaleDetails() external view returns (uint256, uint256, uint256, uint256, uint256) {
+        return (start, end, softCapAmount, hardCapAmount, presaleMin);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        ADMIN: UPDATE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Updates the soft cap for the presale
+    /// @param _softCapAmount The new soft cap for the presale
+    function updateSoftCapAmount(uint256 _softCapAmount) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        softCapAmount = _softCapAmount;
+    }
+
+    /// @notice Updates the hard cap for the presale
+    /// @param _hardCapAmount The new hard cap for the presale
+    function updateHardCapAmount(uint256 _hardCapAmount) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        hardCapAmount = _hardCapAmount;
+    }
+
+    /// @notice Updates the token that is sold in the presale
+    /// @param _sellTokenAddress The address of the new token to be sold
+    function updateSellToken(
+        address _sellTokenAddress,
+        uint256 _sellTokenDecimals)
+        external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        sellToken = _sellTokenAddress;
+        sellTokenDecimals = _sellTokenDecimals;
+    }
+
+    /// @notice Updates the sell rate between depositToken and sellToken
+    /// @dev At sellRate = 10, then 1 depositToken returns 10 sellToken
+    /// @param _sellRate The new sellRate
+    function updateSellRate(uint256 _sellRate) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        sellRate = _sellRate;
+    }
+
+    /// @notice Updates the minimum amount of tokens needed to join the presale
+    /// @param _poolmin Thew new minimum amount of tokens
+    function updateMin(uint256 _poolmin) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        presaleMin = _poolmin;
+    }
+
+    /// @notice Changes The variables for the require token to be held to join the presale
+    /// @param _amount New amount of tokens required to be held
+    /// @param _token The new token that needs to be held
+    /// @param _status Toggles if there is a required token to be held
+    function updateRequiredToken(uint256 _amount, address _token, bool _status) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        requireTokenAmount = _amount;
+        requireToken = _token;
+        requireTokenStatus = _status;
+    }
+
 }
