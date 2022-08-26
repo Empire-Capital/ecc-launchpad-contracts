@@ -13,9 +13,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address payable;
 
-    /* Defining Initial Parameters */
-    mapping(address => uint256) public presaleContribution;
-
     enum Status {
         beforeSale,
         duringSale,
@@ -40,6 +37,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     address public requireToken;
     bool public requireTokenStatus;
     bool public crossChainPresale;
+
+    mapping(address => uint256) public presaleContribution;
 
     constructor(address _sellToken) {
         sellToken = _sellToken;
