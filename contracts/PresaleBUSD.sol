@@ -1,5 +1,6 @@
-pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
+pragma solidity 0.8.4;
+
 import "./libraries/Ownable.sol";
 import "./libraries/SafeMath.sol";
 import "./libraries/Address.sol";
@@ -13,99 +14,147 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     using Address for address payable;
 
     /* Defining Initial Parameters */
-    mapping(address => uint256) public accounting_contribution;
-    mapping(address => uint256) public presale_contribution;
-    mapping(address => uint256) public totalPurchased;
+    mapping(address => uint256) public presaleContribution;
 
     bool public claimEnabled = false;
     bool public refundEnabled = false;
-    uint256 public currentPoolAmount = 0;
-    uint256 public currentPoolParticipants = 0;
+    uint256 public currentDepositAmount;
+    uint256 public currentPresaleParticipants;
 
-    address public idoToken;
     uint256 public start;
     uint256 public end;
-    address public depositToken = 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56; //BUSD 18 DECIMALS
+    address public depositToken; // 0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56 BUSD
+    address public sellToken;
+    uint256 public sellTokenDecimals;
 
-    uint256 public presaleMin = 2000 * 10**18; //2K
-    uint256 public presaleMax = 125000 * 10**18; //125K
+    uint256 public presaleMin;
+    uint256 public presaleMax;
+    uint256 public hardCapAmount;
 
-    uint256 public hardCapAmount = 125000 * 10**18; //125K
+    uint256 public sellRate;
 
-    uint256 public poolRate = 31; //31 Tokens per $1 BUSD
-    uint256 public poolDecimals = 9; //If REKT token is 9 decimals
+    constructor(address _depositToken, address _sellToken) {
+        depositToken = _depositToken;
+        sellToken = _sellToken;
+        sellTokenDecimals = IERC20(sellToken).decimals();
+
+        uint256 depositTokenDecimals = IERC20(depositToken).decimals();
+        presaleMin = 2000 * 10**depositTokenDecimals; //2K
+        presaleMax = 125000 * 10**depositTokenDecimals; //125K
+        hardCapAmount = 125000 * 10**depositTokenDecimals; //125K
+
+        sellRate = 31; //31 Tokens per 1 BUSD
+    }
+
+    receive() external payable {}
+
+    // User Functions
+
+    function deposit(uint256 _amount) external nonReentrant {
+        uint256 value = _amount;
+        require(
+            value + presaleContribution[msg.sender] >= presaleMin,
+            "Per user limit min"
+        );
+        require(
+            value + presaleContribution[msg.sender] <= presaleMax,
+            "Per user limit max"
+        );
+        require(
+            value + currentDepositAmount <= hardCapAmount,
+            "No more deposit allowed. Presale is full"
+        );
+        require(start < block.timestamp, "Presale not started");
+        require(end > block.timestamp, "Presale ended");
+
+        // require(msg.value <= whitelistedAddressesAmount[msg.sender] || !onlyWhitelistedAddressesAllowed, "Must deposit the amount bs.");
+
+
+        //Transfer depositToken from the participant to the contract
+        IERC20(depositToken).safeTransferFrom(
+            msg.sender,
+            address(this),
+            _amount
+        );
+
+        if (presaleContribution[msg.sender] == 0) {
+            currentPresaleParticipants++;
+        }
+
+        //Record and account the depositToken entered into presale
+        presaleContribution[msg.sender] += value;
+        currentDepositAmount += value;
+    }
+
+    function claim() external nonReentrant {
+        require(claimEnabled == true, "Claim not enabled");
+        require(refundEnabled == false, "Refund must not be enabled");
+
+        address user = msg.sender;
+        uint256 currentAmount = presaleContribution[user];
+        require(currentAmount > 0, "Invalid amount");
+        uint256 amount = currentAmount * sellRate / sellTokenDecimals;
+        IERC20(sellToken).safeTransfer(user, amount);
+        presaleContribution[user] = 0;
+    }
+
+    function refund() public nonReentrant {
+        require(refundEnabled == true, "Not Allowed. Refund not enabled");
+        require(claimEnabled == false, "Claim must not be enabled");
+
+        //Refund BUSD
+        address user = msg.sender;
+        uint256 currentAmount = presaleContribution[user];
+        require(currentAmount > 0, "Invalid amount");
+        IERC20(depositToken).safeTransfer(msg.sender, currentAmount);
+        presaleContribution[user] = 0;
+        currentPresaleParticipants--;
+    }
+
+    // Admin: Presale Functions
+
+    function startPresale() external onlyOwner {
+        start = block.timestamp;
+        end = block.timestamp + 1 days;
+    }
+
+    function completePresale(
+        address _tokenAddr,
+        address _to,
+        uint256 _amount
+    ) external onlyOwner {
+        IERC20(_tokenAddr).safeTransfer(_to, _amount);
+    }
+
+    function newRound(uint256 duration) external onlyOwner {
+        start = block.timestamp;
+        end = block.timestamp + duration;
+    }
 
     function updateCrossChainBalances(
         address[] calldata _address,
         uint256[] calldata _amount
     ) external onlyOwner {
-        //Transfer USDC to contract manually from BSC
+        //Transfer depositToken to contract manually from other chain
         for (uint256 i = 0; i < _address.length; i++) {
-            if (presale_contribution[_address[i]] == 0) {
-                currentPoolParticipants = currentPoolParticipants.add(1);
+            if (presaleContribution[_address[i]] == 0) {
+                currentPresaleParticipants++;
             }
 
-            accounting_contribution[_address[i]] = accounting_contribution[
-                _address[i]
-            ].add(_amount[i]);
-            presale_contribution[_address[i]] = presale_contribution[
-                _address[i]
-            ].add(_amount[i]);
-            totalPurchased[_address[i]] = presale_contribution[_address[i]];
-            currentPoolAmount = currentPoolAmount.add(_amount[i]);
+            presaleContribution[_address[i]] += _amount[i];
+            currentDepositAmount += _amount[i];
         }
     }
 
-    function deposit(uint256 amount) external nonReentrant {
-        uint256 value = amount;
-        // require(msg.value <= whitelistedAddressesAmount[msg.sender] || !onlyWhitelistedAddressesAllowed, "Must deposit the amount bid.");
-        require(
-            value.add(presale_contribution[msg.sender]) >= presaleMin,
-            "Per user limit min"
-        );
-        require(
-            value.add(presale_contribution[msg.sender]) <= presaleMax,
-            "Per user limit max"
-        );
-
-        require(
-            value.add(currentPoolAmount) <= hardCapAmount,
-            "No more deposit allowed. Presale is full"
-        );
-        require(start < block.timestamp, "Must meet requirements");
-        require(end > block.timestamp, "Presale Ended");
-
-        //Transfer USDC from the participant to the contract
-        IERC20(depositToken).safeTransferFrom(
-            msg.sender,
-            address(this),
-            amount
-        );
-
-        if (presale_contribution[msg.sender] == 0) {
-            currentPoolParticipants = currentPoolParticipants.add(1);
-        }
-
-        //Record and account the USDC entered into presale
-        accounting_contribution[msg.sender] = accounting_contribution[
-            msg.sender
-        ].add(value);
-        presale_contribution[msg.sender] = presale_contribution[msg.sender].add(
-            value
-        );
-        totalPurchased[msg.sender] = presale_contribution[msg.sender];
-        currentPoolAmount = currentPoolAmount.add(value);
-    }
+    // View Functions
 
     function getStakers(address _user) external view returns (uint256) {
-        uint256 amount = presale_contribution[_user];
+        uint256 amount = presaleContribution[_user];
         return amount;
     }
 
     function getPendingToken(address _user) external view returns (uint256) {
-        uint256 token = presale_contribution[_user].mul(poolRate).div(
-            poolDecimals
-        );
+        uint256 token = presaleContribution[_user] * sellRate / sellTokenDecimals;
         return token;
     }
 
@@ -117,58 +166,26 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         return refundEnabled;
     }
 
-    function claim() external nonReentrant {
-        require(claimEnabled == true, "Claim not enabled");
-        require(refundEnabled == false, "Refund must not be enabled");
-
-        address _user = msg.sender;
-        uint256 currentAmount = presale_contribution[_user];
-        require(currentAmount > 0, "Invalid amount");
-        uint256 token = currentAmount.mul(poolRate).div(poolDecimals);
-        IERC20(idoToken).safeTransfer(_user, token);
-        presale_contribution[_user] = 0;
-    }
-
-    function refund() public nonReentrant {
-        require(refundEnabled == true, "Not Allowed. Refund not enabled");
-        require(claimEnabled == false, "Claim must not be enabled");
-
-        //Refund BUSD
-        address _user = msg.sender;
-        uint256 currentAmount = presale_contribution[_user];
-        require(currentAmount > 0, "Invalid amount");
-        IERC20(depositToken).safeTransfer(msg.sender, currentAmount);
-        presale_contribution[_user] = 0;
-    }
-
-    function setupPresale() external onlyOwner {
-        start = block.timestamp;
-        end = block.timestamp + 1 days;
-    }
-
-    function newRound(uint256 duration) external onlyOwner {
-        start = block.timestamp;
-        end = block.timestamp + duration;
-    }
+    // Admin: Update Functions
 
     function updateHardCapRate(uint256 _hardCapAmount) external onlyOwner {
         hardCapAmount = _hardCapAmount;
     }
 
-    function updateIdoToken(address _idoAddress) external onlyOwner {
-        idoToken = _idoAddress;
+    function updateSellToken(address _sellTokenAddress) external onlyOwner {
+        sellToken = _sellTokenAddress;
     }
 
     function updateDepositToken(address _depositToken) external onlyOwner {
         depositToken = _depositToken;
     }
 
-    function updatePoolRate(uint256 _poolRate) external onlyOwner {
-        poolRate = _poolRate;
+    function updateSellRate(uint256 _sellRate) external onlyOwner {
+        sellRate = _sellRate;
     }
 
-    function updatePoolDecimals(uint256 _poolDecimals) external onlyOwner {
-        poolDecimals = _poolDecimals;
+    function updateSellTokenDecimals(uint256 _sellTokenDecimals) external onlyOwner {
+        sellTokenDecimals = _sellTokenDecimals;
     }
 
     function updateMin(uint256 _poolmin) external onlyOwner {
@@ -193,14 +210,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     function updateRefund(bool _refund) external onlyOwner {
         refundEnabled = _refund;
-    }
-
-    function completePresale(
-        address _tokenAddr,
-        address _to,
-        uint256 _amount
-    ) external onlyOwner {
-        IERC20(_tokenAddr).safeTransfer(_to, _amount);
     }
 
     function recoverNative() external onlyOwner {
