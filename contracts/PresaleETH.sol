@@ -2,14 +2,12 @@
 pragma solidity 0.8.4;
 
 import "./libraries/Ownable.sol";
-import "./libraries/SafeMath.sol";
 import "./libraries/Address.sol";
 import "./libraries/ReentrancyGuard.sol";
 import "./libraries/SafeERC20.sol";
 import "./interfaces/IERC20.sol";
 
 contract PresaleBUSD is Ownable, ReentrancyGuard {
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Address for address payable;
 
