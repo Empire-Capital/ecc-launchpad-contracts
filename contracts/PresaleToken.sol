@@ -94,9 +94,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
             _amount
         );
 
-        if (presaleContribution[user] == 0) {
-            currentPresaleParticipants++;
-        }
+        if (presaleContribution[user] == 0) {currentPresaleParticipants++;}
 
         //Record and account the depositToken entered into presale
         presaleContribution[user] += value;
@@ -194,6 +192,18 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     function getPendingToken(address _user) external view returns (uint256) {
         return presaleContribution[_user] * sellRate / sellTokenDecimals;
+    }
+
+    function getDepositedTokens() external view returns (uint256) {
+        return currentDepositAmount;
+    }
+
+    function getRequireTokenDetails() external view returns (uint256, address, bool) {
+        return (requireTokenAmount, requireToken, requireTokenStatus);
+    }
+
+    function getPresaleDetails() external view returns (uint256, uint256, uint256, uint256, uint256) {
+        return (start, end, softCapAmount, hardCapAmount, presaleMin);
     }
 
     // Admin: Update Functions
