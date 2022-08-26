@@ -71,8 +71,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     function deposit(uint256 _amount) external nonReentrant {
         uint256 value = _amount;
+        address user = msg.sender;
         require(
-            value + presaleContribution[msg.sender] >= presaleMin,
+            value + presaleContribution[user] >= presaleMin,
             "Must deposit more than presale minimum"
         );
         require(
@@ -82,23 +83,23 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         require(status == Status.duringSale, "Presale is not active");
 
         if (requireTokenStatus) {
-            require(IERC20(requireToken).balanceOf(msg.sender) > requireTokenAmount,
+            require(IERC20(requireToken).balanceOf(user) > requireTokenAmount,
             "User does not hold enough required tokens");
         }
 
         //Transfer depositToken from the participant to the contract
         IERC20(depositToken).safeTransferFrom(
-            msg.sender,
+            user,
             address(this),
             _amount
         );
 
-        if (presaleContribution[msg.sender] == 0) {
+        if (presaleContribution[user] == 0) {
             currentPresaleParticipants++;
         }
 
         //Record and account the depositToken entered into presale
-        presaleContribution[msg.sender] += value;
+        presaleContribution[user] += value;
         currentDepositAmount += value;
     }
 
@@ -117,11 +118,11 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         require(status == Status.duringSale ||
                 status == Status.afterSaleFailure, "Presale finished successfully");
 
-        //Refund BUSD
+        // Refund deposited tokens
         address user = msg.sender;
         uint256 currentAmount = presaleContribution[user];
         require(currentAmount > 0, "Invalid amount");
-        IERC20(depositToken).safeTransfer(msg.sender, currentAmount);
+        IERC20(depositToken).safeTransfer(user, currentAmount);
         presaleContribution[user] = 0;
         currentPresaleParticipants--;
     }
@@ -131,7 +132,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     function startPresale(uint256 presaleHours) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         start = block.timestamp;
-        end = block.timestamp + (presaleHours * 1 days);
+        end = block.timestamp + (presaleHours * 1 hours);
     }
 
     function completePresale() external onlyOwner {
