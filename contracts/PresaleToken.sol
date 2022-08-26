@@ -35,7 +35,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     uint256 public end;
 
     uint256 public presaleMin;
-    uint256 public presaleMax;
 
     uint256 public softCapAmount;
     uint256 public hardCapAmount;
@@ -52,7 +51,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
         uint256 depositTokenDecimals = IERC20(depositToken).decimals();
         presaleMin = 2000 * 10**depositTokenDecimals; // 2K
-        presaleMax = 125000 * 10**depositTokenDecimals; // 125K
         hardCapAmount = 125000 * 10**depositTokenDecimals; // 125K
 
         sellRate = 1; // X Tokens per 1 depositToken
@@ -71,11 +69,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         uint256 value = _amount;
         require(
             value + presaleContribution[msg.sender] >= presaleMin,
-            "Per user limit min"
-        );
-        require(
-            value + presaleContribution[msg.sender] <= presaleMax,
-            "Per user limit max"
+            "Must deposit more than presale minimum"
         );
         require(
             value + currentDepositAmount <= hardCapAmount,
@@ -85,7 +79,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
         if (requireTokenStatus) {
             require(IERC20(requireToken).balanceOf(msg.sender) > requireTokenAmount,
-            "User does not hold enough requireTokens");
+            "User does not hold enough required tokens");
         }
 
         //Transfer depositToken from the participant to the contract
@@ -230,11 +224,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     function updateMin(uint256 _poolmin) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         presaleMin = _poolmin;
-    }
-
-    function updateMax(uint256 _poolmax) external onlyOwner {
-        require(status == Status.beforeSale, "Presale is already active");
-        presaleMax = _poolmax;
     }
 
     function updateRequiredToken(uint256 _amount, address _token, bool _status) external onlyOwner {
