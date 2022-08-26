@@ -44,6 +44,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     address public requireToken;
     bool public requireTokenStatus;
 
+    bool public crossChainPresale;
+
     constructor(address _depositToken, address _sellToken) {
         depositToken = _depositToken;
         sellToken = _sellToken;
@@ -59,6 +61,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         requireTokenAmount = 150000 * 10**18; // 150K
         requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
         requireTokenStatus = false; // false = no requirements, true = holding token required to join
+
+        crossChainPresale = false; // false = presale on one chain, true = presale on multiple chains
     }
 
     receive() external payable {}
@@ -163,6 +167,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         address[] calldata _address,
         uint256[] calldata _amount
     ) external onlyOwner {
+        require(crossChainPresale, "Presale not cross chain");
         require(status == Status.beforeSale ||
                 status == Status.duringSale, "Presale finished already");
         //Transfer depositToken to contract manually from other chain
