@@ -41,6 +41,10 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     uint256 public hardCapAmount;
     uint256 public sellRate;
 
+    uint256 public requireTokenAmount;
+    address public requireToken;
+    bool public requireTokenStatus;
+
     constructor(address _depositToken, address _sellToken) {
         depositToken = _depositToken;
         sellToken = _sellToken;
@@ -53,6 +57,10 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
         sellRate = 1; // X Tokens per 1 depositToken
         projectAdminAddress = 0x0000000000000000000000000000000000000000; // admin of presale project
+
+        requireTokenAmount = 150000 * 10**18; // 150K
+        requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
+        requireTokenStatus = false; // false = no requirements, true = holding token required to join
     }
 
     receive() external payable {}
@@ -75,7 +83,10 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         );
         require(status == Status.duringSale, "Presale is not active");
 
-        // require(msg.value <= whitelistedAddressesAmount[msg.sender] || !onlyWhitelistedAddressesAllowed, "Must deposit the amount bs.");
+        if (requireTokenStatus) {
+            require(IERC20(requireToken).balanceOf(msg.sender) > requireTokenAmount,
+            "User does not hold enough requireTokens");
+        }
 
         //Transfer depositToken from the participant to the contract
         IERC20(depositToken).safeTransferFrom(
@@ -224,6 +235,13 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     function updateMax(uint256 _poolmax) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         presaleMax = _poolmax;
+    }
+
+    function updateRequiredToken(uint256 _amount, address _token, bool _status) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        requireTokenAmount = _amount;
+        requireToken = _token;
+        requireTokenStatus = _status;
     }
 
     function recoverNative() external onlyOwner {
