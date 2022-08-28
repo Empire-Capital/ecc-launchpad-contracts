@@ -7,6 +7,9 @@ import "./libraries/ReentrancyGuard.sol";
 import "./libraries/SafeERC20.sol";
 import "./interfaces/IERC20.sol";
 
+/// @title PresaleETH
+/// @author Empire Capital
+/// @dev A contract for presales that accepts native coins
 contract PresaleBUSD is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address payable;
@@ -61,7 +64,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
                             USER FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Enters the presale
+    /// @notice Deposits `msg.value` into the presale
+    /// @dev Enters the presale
     function deposit() external payable nonReentrant {
         uint256 value = msg.value;
         address user = msg.sender;
@@ -87,7 +91,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         currentDepositAmount += value;
     }
 
-    /// @notice Claims tokens after the presale is finished
+    /// @dev Claims tokens after the presale is finished
     function claim() external nonReentrant {
         require(status == Status.afterSaleSuccess, "Presale is still active");
 
@@ -99,7 +103,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         presaleContribution[user] = 0;
     }
 
-    /// @notice Claims a refund if presale is still active or soft cap was not reached
+    /// @dev Claims a refund if presale is still active or soft cap was not reached
     function refund() public nonReentrant {
         require(status == Status.duringSale ||
                 status == Status.afterSaleFailure, "Presale finished successfully");
@@ -117,7 +121,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
                         ADMIN: PRESALE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Starts the presale
+    /// @dev Starts the presale
     /// @param presaleHours The amount of hours the presale will last for
     function startPresale(uint256 presaleHours) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
@@ -125,8 +129,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         end = block.timestamp + (presaleHours * 1 days);
     }
 
-    /// @notice Ends the presale, preventing new deposits and allowing claims/refunds based on soft cap being met
-    /// @dev raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to admin
+    /// @notice Raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to admin
+    /// @dev Ends the presale, preventing new deposits and allowing claims/refunds based on soft cap being met
     function completePresale() external onlyOwner {
         require(status == Status.duringSale, "Presale is not active");
 
@@ -150,7 +154,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         }
     }
 
-    /// @notice Extends the presale
+    /// @dev Extends the presale
     /// @param _end The new end time for the presale
     function extendPresale(uint256 _end) external onlyOwner {
         require(_end > end, "New end time must be after current end");
@@ -158,7 +162,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         end = _end;
     }
 
-    /// @notice Updates the amount of tokens an address contributed in the presale on another chain
+    /// @dev Updates the amount of tokens an address contributed in the presale on another chain
     /// @param _address The array of addresses
     /// @param _amount The array of contribution amount the addresses
     function updateCrossChainBalances(
@@ -183,26 +187,46 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
                             VIEW FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Returns the current status of the presale
+    /// @return The enum status of the presale
     function getSaleStatus() external view returns (Status) {
         return status;
     }
 
+    /// @dev Returns the amount of native coin a user has entered into the presale
+    /// @param _user The user to check
+    /// @return The amount of native coin deposited
     function getUserContribution(address _user) external view returns (uint256) {
         return presaleContribution[_user];
     }
 
+    /// @dev Returns the amount of sellTokens a user can claim after presale finishes
+    /// @param _user The user to check
+    /// @return The amount of sellTokens the user can claim
     function getPendingToken(address _user) external view returns (uint256) {
         return presaleContribution[_user] * sellRate / sellTokenDecimals;
     }
 
-    function getDepositedTokens() external view returns (uint256) {
+    /// @dev Returns the total amount of native coin deposited
+    /// @return The amount of native coin
+    function getDepositedETH() external view returns (uint256) {
         return currentDepositAmount;
     }
 
+    /// @dev Returns the requirements to join the presale
+    /// @return The amount of requireToken a user has to hold to join the presale
+    /// @return The address of the requireToken that needs to be held
+    /// @return True if requirements in place, else false
     function getRequireTokenDetails() external view returns (uint256, address, bool) {
         return (requireTokenAmount, requireToken, requireTokenStatus);
     }
 
+    /// @dev Returns details about the presale
+    /// @return The UNIX start time of the presale
+    /// @return The UNIX end time of the presale
+    /// @return The soft cap amount of the presale
+    /// @return The hard cap amount of the presale
+    /// @return The minimum amount required to join the presale
     function getPresaleDetails() external view returns (uint256, uint256, uint256, uint256, uint256) {
         return (start, end, softCapAmount, hardCapAmount, presaleMin);
     }
@@ -211,21 +235,21 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
                         ADMIN: UPDATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Updates the soft cap for the presale
+    /// @dev Updates the soft cap for the presale
     /// @param _softCapAmount The new soft cap for the presale
     function updateSoftCapAmount(uint256 _softCapAmount) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         softCapAmount = _softCapAmount;
     }
 
-    /// @notice Updates the hard cap for the presale
+    /// @dev Updates the hard cap for the presale
     /// @param _hardCapAmount The new hard cap for the presale
     function updateHardCapAmount(uint256 _hardCapAmount) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         hardCapAmount = _hardCapAmount;
     }
 
-    /// @notice Updates the token that is sold in the presale
+    /// @dev Updates the token that is sold in the presale
     /// @param _sellTokenAddress The address of the new token to be sold
     function updateSellToken(
         address _sellTokenAddress,
@@ -236,22 +260,22 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         sellTokenDecimals = _sellTokenDecimals;
     }
 
-    /// @notice Updates the sell rate between depositToken and sellToken
-    /// @dev At sellRate = 10, then 1 depositToken returns 10 sellToken
+    /// @notice At sellRate = 10, then 1 depositToken returns 10 sellToken
+    /// @dev Updates the sell rate between depositToken and sellToken
     /// @param _sellRate The new sellRate
     function updateSellRate(uint256 _sellRate) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         sellRate = _sellRate;
     }
 
-    /// @notice Updates the minimum amount of tokens needed to join the presale
+    /// @dev Updates the minimum amount of tokens needed to join the presale
     /// @param _poolmin Thew new minimum amount of tokens
     function updateMin(uint256 _poolmin) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         presaleMin = _poolmin;
     }
 
-    /// @notice Changes The variables for the require token to be held to join the presale
+    /// @dev Changes The variables for the require token to be held to join the presale
     /// @param _amount New amount of tokens required to be held
     /// @param _token The new token that needs to be held
     /// @param _status Toggles if there is a required token to be held
