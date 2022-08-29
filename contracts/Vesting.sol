@@ -1,20 +1,20 @@
-pragma solidity ^0.8.0;
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+// SPDX-License-Identifier: AGPL-3.0
+pragma solidity 0.8.4;
+
+import "./libraries/Ownable.sol";
+import "./libraries/Address.sol";
+import "./libraries/ReentrancyGuard.sol";
+import "./libraries/SafeERC20.sol";
+import "./interfaces/IERC20.sol";
 
 interface IPresale {
     function totalPurchased(address _user) external view returns (uint256);
 }
 
-/**
- * @title TokenVesting
- */
+/// @title Token Vesting
+/// @author Empire Capital
+/// @dev A vesting contract for locking up tokens to be distributed over time
 contract TokenVesting is Ownable, ReentrancyGuard {
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     uint256 public startTime;
@@ -49,42 +49,33 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         endTime = end;
     }
 
-    receive() external payable {}
-
-    fallback() external payable {}
-
-    /**
-     * @dev Returns the address of the ERC20 token managed by the vesting contract.
-     */
+    /// @dev Returns the address of the ERC20 token managed by the vesting contract.
+    /// @return The address of the token
     function getToken() external view returns (address) {
         return address(_token);
     }
 
-    function calculateClaimableAmount(address user)
-        public
-        view
-        returns (uint256)
-    {
+    function calculateClaimableAmount(address user) public view returns (uint256) {
         uint256 totalPendingAmount = IPresale(presale)
             .totalPurchased(user)
-            .mul(poolRate)
-            .mul(totalVestingPercent)
-            .div(10000);
+            * poolRate
+            / totalVestingPercent
+            / 10000;
         if (totalPendingAmount == 0) {
             return 0;
         }
         if (block.timestamp < startTime) {
             return 0;
         }
-        uint256 totalDayPassed = block.timestamp.sub(startTime).div(cliff);
-        uint256 totalDayDistributed = endTime.sub(startTime).div(cliff);
+        uint256 totalDayPassed = block.timestamp - startTime / cliff;
+        uint256 totalDayDistributed = endTime - startTime / cliff;
         if (totalDayPassed >= totalDayDistributed) {
-            return totalPendingAmount.sub(userClaimedAmount[user]);
+            return totalPendingAmount - userClaimedAmount[user];
         }
         uint256 claimableAmount = totalPendingAmount
-            .mul(totalDayPassed)
-            .div(totalDayDistributed)
-            .sub(userClaimedAmount[user]);
+            * totalDayPassed
+            / totalDayDistributed
+            - userClaimedAmount[user];
         return claimableAmount;
     }
 
@@ -92,7 +83,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         uint256 amount = calculateClaimableAmount(msg.sender);
         require(amount > 0, "Can-not-claim-zero");
         _token.safeTransfer(msg.sender, amount);
-        userClaimedAmount[msg.sender] =  userClaimedAmount[msg.sender].add(amount);
+        userClaimedAmount[msg.sender] +=  amount;
         emit Claimed(msg.sender, amount);
     }
 
@@ -104,4 +95,5 @@ contract TokenVesting is Ownable, ReentrancyGuard {
             IERC20(token).safeTransfer(msg.sender, tokenBalance);
         }
     }
+
 }
