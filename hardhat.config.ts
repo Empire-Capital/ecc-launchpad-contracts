@@ -26,7 +26,7 @@ const deployerKey = process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.12",
+    version: "0.8.4",
     settings: {
       // "viaIR": true, // fixes stack too deep errors w/ optimized via-IR code generation pipeline
       optimizer: {
