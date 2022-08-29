@@ -23,7 +23,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     Status public status;
 
-    address public projectAdminAddress;
+    address public projectTeamAddress;
     address public sellToken;
     uint256 public sellTokenDecimals;
     uint256 public currentDepositAmount;
@@ -49,7 +49,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         presaleMin = 1000 * 10**18; // 1K
         softCapAmount = 100000 * 10*18; // 100K
         hardCapAmount = 125000 * 10**18; // 125K
-        projectAdminAddress = 0x0000000000000000000000000000000000000000; // admin of presale project
+        projectTeamAddress = 0x0000000000000000000000000000000000000000; // team address of presale project
 
         requireTokenAmount = 150000 * 10**18; // 150K
         requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
@@ -58,7 +58,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         crossChainPresale = false; // false = presale on one chain, true = presale on multiple chains
     }
 
-    receive() external payable {}
+    receive() external payable {
+        deposit();
+    }
 
     /*//////////////////////////////////////////////////////////////
                             USER FUNCTIONS
@@ -66,7 +68,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     /// @notice Deposits `msg.value` into the presale
     /// @dev Enters the presale
-    function deposit() external payable nonReentrant {
+    function deposit() public payable nonReentrant {
         uint256 value = msg.value;
         address user = msg.sender;
         require(
@@ -114,7 +116,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         require(currentAmount > 0, "Invalid amount");
         payable(user).sendValue(currentAmount);
         presaleContribution[user] = 0;
-        currentPresaleParticipants--;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -129,7 +130,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         end = block.timestamp + (presaleHours * 1 days);
     }
 
-    /// @notice Raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to admin
+    /// @notice Raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to team
     /// @dev Ends the presale, preventing new deposits and allowing claims/refunds based on soft cap being met
     function completePresale() external onlyOwner {
         require(status == Status.duringSale, "Presale is not active");
@@ -139,18 +140,18 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
             status = Status.afterSaleFailure;
 
             uint256 unsoldTokens = IERC20(sellToken).balanceOf(address(this));
-            IERC20(sellToken).safeTransfer(projectAdminAddress, unsoldTokens);
+            IERC20(sellToken).safeTransfer(projectTeamAddress, unsoldTokens);
 
         // If presale hits their soft cap
         } else {
             status = Status.afterSaleSuccess;
            
-            // Transfer deposited native coin from presale to projects admin address
-            payable(projectAdminAddress).sendValue(address(this).balance);
+            // Transfer deposited native coin from presale to projects team address
+            payable(projectTeamAddress).sendValue(address(this).balance);
 
-            // Transfer tokens not sold in presale to projects admin address
+            // Transfer tokens not sold in presale to projects team address
             uint256 unsoldTokens = currentDepositAmount * sellRate / sellTokenDecimals;
-            IERC20(sellToken).safeTransfer(projectAdminAddress, unsoldTokens);
+            IERC20(sellToken).safeTransfer(projectTeamAddress, unsoldTokens);
         }
     }
 
