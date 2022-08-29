@@ -7,9 +7,9 @@ import "./libraries/ReentrancyGuard.sol";
 import "./libraries/SafeERC20.sol";
 import "./interfaces/IERC20.sol";
 
-/// @title PresaleETH
+/// @title PresaleToken
 /// @author Empire Capital
-/// @dev A contract for presales that accepts native coins
+/// @dev A contract for presales that accepts tokens
 contract PresaleBUSD is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address payable;
@@ -24,6 +24,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     Status public status;
 
     address public projectAdminAddress;
+    address public depositToken;
     address public sellToken;
     uint256 public sellTokenDecimals;
     uint256 public currentDepositAmount;
@@ -41,14 +42,16 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     mapping(address => uint256) public presaleContribution;
 
-    constructor(address _sellToken) {
+    constructor(address _depositToken, address _sellToken) {
+        depositToken = _depositToken;
+        uint256 depositTokenDecimals = IERC20(depositToken).decimals();
         sellToken = _sellToken;
         sellTokenDecimals = IERC20(sellToken).decimals();
 
         sellRate = 1; // X sellToken per 1 depositToken
-        presaleMin = 1000 * 10**18; // 1K
-        softCapAmount = 100000 * 10*18; // 100K
-        hardCapAmount = 125000 * 10**18; // 125K
+        presaleMin = 1000 * 10**depositTokenDecimals; // 1K
+        softCapAmount = 100000 * 10*depositTokenDecimals; // 100K
+        hardCapAmount = 125000 * 10**depositTokenDecimals; // 125K
         projectAdminAddress = 0x0000000000000000000000000000000000000000; // admin of presale project
 
         requireTokenAmount = 150000 * 10**18; // 150K
@@ -64,10 +67,11 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
                             USER FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Deposits `msg.value` into the presale
+    /// @notice Deposits `_amount` into the presale
     /// @dev Enters the presale
-    function deposit() external payable nonReentrant {
-        uint256 value = msg.value;
+    /// @param _amount The amount of tokens to be deposited into the presale
+    function deposit(uint256 _amount) external nonReentrant {
+        uint256 value = _amount;
         address user = msg.sender;
         require(
             value + presaleContribution[user] >= presaleMin,
@@ -84,9 +88,16 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
             "User does not hold enough required tokens");
         }
 
+        //Transfer depositToken from the participant to the contract
+        IERC20(depositToken).safeTransferFrom(
+            user,
+            address(this),
+            _amount
+        );
+
         if (presaleContribution[user] == 0) {currentPresaleParticipants++;}
 
-        //Record and account the native coin entered into presale
+        //Record and account the depositToken entered into presale
         presaleContribution[user] += value;
         currentDepositAmount += value;
     }
@@ -108,11 +119,11 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         require(status == Status.duringSale ||
                 status == Status.afterSaleFailure, "Presale finished successfully");
 
-        // Refund deposit tokens
+        // Refund deposited tokens
         address user = msg.sender;
         uint256 currentAmount = presaleContribution[user];
         require(currentAmount > 0, "Invalid amount");
-        payable(user).sendValue(currentAmount);
+        IERC20(depositToken).safeTransfer(user, currentAmount);
         presaleContribution[user] = 0;
         currentPresaleParticipants--;
     }
@@ -126,7 +137,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     function startPresale(uint256 presaleHours) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         start = block.timestamp;
-        end = block.timestamp + (presaleHours * 1 days);
+        end = block.timestamp + (presaleHours * 1 hours);
     }
 
     /// @notice Raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to admin
@@ -145,8 +156,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         } else {
             status = Status.afterSaleSuccess;
            
-            // Transfer deposited native coin from presale to projects admin address
-            payable(projectAdminAddress).sendValue(address(this).balance);
+            // Transfer deposited tokens from presale to projects admin address
+            IERC20(depositToken).safeTransfer(projectAdminAddress, currentDepositAmount);
 
             // Transfer tokens not sold in presale to projects admin address
             uint256 unsoldTokens = currentDepositAmount * sellRate / sellTokenDecimals;
@@ -172,7 +183,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         require(crossChainPresale, "Presale not cross chain");
         require(status == Status.beforeSale ||
                 status == Status.duringSale, "Presale finished already");
-        //Transfer native coin to contract manually from other chain
+        //Transfer depositToken to contract manually from other chain
         for (uint256 i = 0; i < _address.length; i++) {
             if (presaleContribution[_address[i]] == 0) {
                 currentPresaleParticipants++;
@@ -193,9 +204,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         return status;
     }
 
-    /// @dev Returns the amount of native coin a user has entered into the presale
+    /// @dev Returns the amount of depositToken a user has entered into the presale
     /// @param _user The user to check
-    /// @return The amount of native coin deposited
+    /// @return The amount of depositToken deposited
     function getUserContribution(address _user) external view returns (uint256) {
         return presaleContribution[_user];
     }
@@ -207,9 +218,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         return presaleContribution[_user] * sellRate / sellTokenDecimals;
     }
 
-    /// @dev Returns the total amount of native coin deposited
-    /// @return The amount of native coin
-    function getDepositedETH() external view returns (uint256) {
+    /// @dev Returns the total amount of depositToken deposited
+    /// @return The amount of depositToken
+    function getDepositedTokens() external view returns (uint256) {
         return currentDepositAmount;
     }
 
@@ -251,13 +262,17 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     /// @dev Updates the token that is sold in the presale
     /// @param _sellTokenAddress The address of the new token to be sold
-    function updateSellToken(
-        address _sellTokenAddress,
-        uint256 _sellTokenDecimals)
-        external onlyOwner {
+    function updateSellToken(address _sellTokenAddress) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         sellToken = _sellTokenAddress;
-        sellTokenDecimals = _sellTokenDecimals;
+        sellTokenDecimals = IERC20(sellToken).decimals();
+    }
+
+    /// @dev Updates the token to be deposited into the presale
+    /// @param _depositToken The address of the new token to be deposited
+    function updateDepositToken(address _depositToken) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        depositToken = _depositToken;
     }
 
     /// @notice At sellRate = 10, then 1 depositToken returns 10 sellToken
@@ -284,6 +299,11 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         requireTokenAmount = _amount;
         requireToken = _token;
         requireTokenStatus = _status;
+    }
+
+    /// @dev Transfers any native coin stuck on the contract
+    function recoverNative() external onlyOwner {
+        payable(msg.sender).sendValue(address(this).balance);
     }
 
 }
