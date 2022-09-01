@@ -51,6 +51,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     /// @param start The UNIX time for distributions to begin
     /// @param end The UNIX time for distributions to end
     function adminSetTime(uint256 start, uint256 end) external onlyOwner {
+        require(block.timestamp < startTime, "Cannot change after vesting has started");
         startTime = start;
         endTime = end;
     }
@@ -97,6 +98,9 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         emit Claimed(msg.sender, amount);
     }
 
+    /// @notice If address is null address can withdraw native coin
+    /// @dev Withdraws stuck native coin or tokens on the contract
+    /// @param _token The address of the stuck token
     function emergencyWithdraw(address _token) external onlyOwner {
         if (_token == address(0)) {
             payable(msg.sender).transfer(address(this).balance);
