@@ -41,6 +41,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     mapping(address => uint256) public presaleContribution;
 
+    /// @param _sellToken The address of the token being sold in the presale
     constructor(address _sellToken) {
         sellToken = _sellToken;
         sellTokenDecimals = IERC20(sellToken).decimals();
@@ -230,6 +231,12 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     /// @return The minimum amount required to join the presale
     function getPresaleDetails() external view returns (uint256, uint256, uint256, uint256, uint256) {
         return (start, end, softCapAmount, hardCapAmount, presaleMin);
+    }
+
+    /// @dev Returns the sellRate of the contract
+    /// @return The sell rate
+    function getSellRate() external view returns (uint256) {
+        return sellRate;
     }
 
     /*//////////////////////////////////////////////////////////////

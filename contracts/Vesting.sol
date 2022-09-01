@@ -8,7 +8,9 @@ import "./libraries/SafeERC20.sol";
 import "./interfaces/IERC20.sol";
 
 interface IPresale {
-    function totalPurchased(address _user) external view returns (uint256);
+    function getUserContribution(address _user) external view returns (uint256);
+
+    function getSellRate() external view returns (uint256);
 }
 
 /// @title Token Vesting
@@ -19,31 +21,36 @@ contract TokenVesting is Ownable, ReentrancyGuard {
 
     uint256 public startTime;
     uint256 public endTime;
-    uint256 public poolRate; // token amount per ETH
+    uint256 public sellRate; // token amount per ETH
     uint256 public totalVestingPercent; // div to 10000, so if 10% -> 1000, 67% -> 6700
     uint256 public cliff = 1 days;
     mapping(address => uint256) public userClaimedAmount;
 
     // address of the ERC20 token
-    IERC20 private immutable _token;
+    IERC20 private immutable token;
     address private presale;
 
     event Claimed(address user, uint256 amount);
 
+    /// @param _token The address of the token that is being vested
+    /// @param _presale The address of the presale contract
+    /// @param _totalVestingPercent TODO
     constructor(
-        address token_,
-        address presale_,
-        uint256 poolRate_,
-        uint256 totalVestingPercent_
+        address _token,
+        address _presale,
+        uint256 _totalVestingPercent
     ) {
-        require(token_ != address(0));
-        require(presale_ != address(0));
-        _token = IERC20(token_);
-        presale = presale_;
-        poolRate = poolRate_;
-        totalVestingPercent = totalVestingPercent_;
+        require(_token != address(0));
+        require(_presale != address(0));
+        token = IERC20(_token);
+        presale = _presale;
+        sellRate = IPresale(_token).getSellRate();
+        totalVestingPercent = _totalVestingPercent;
     }
 
+    /// @dev Sets when the rewards will start and end distribution
+    /// @param start The UNIX time for distributions to begin
+    /// @param end The UNIX time for distributions to end
     function adminSetTime(uint256 start, uint256 end) external onlyOwner {
         startTime = start;
         endTime = end;
@@ -52,13 +59,16 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     /// @dev Returns the address of the ERC20 token managed by the vesting contract.
     /// @return The address of the token
     function getToken() external view returns (address) {
-        return address(_token);
+        return address(token);
     }
 
+    /// @dev Calculates the amount of tokens the user can claim at current time
+    /// @param user The address of the user to check claimable rewards
+    /// @return The amount of claimable rewards
     function calculateClaimableAmount(address user) public view returns (uint256) {
         uint256 totalPendingAmount = IPresale(presale)
-            .totalPurchased(user)
-            * poolRate
+            .getUserContribution(user)
+            * sellRate
             / totalVestingPercent
             / 10000;
         if (totalPendingAmount == 0) {
@@ -79,20 +89,21 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         return claimableAmount;
     }
 
+    /// @dev Claims the users claimable rewards
     function claim() external nonReentrant {
         uint256 amount = calculateClaimableAmount(msg.sender);
         require(amount > 0, "Can-not-claim-zero");
-        _token.safeTransfer(msg.sender, amount);
+        token.safeTransfer(msg.sender, amount);
         userClaimedAmount[msg.sender] +=  amount;
         emit Claimed(msg.sender, amount);
     }
 
-    function emergencyWithdraw(address token) external onlyOwner {
-        if (token == address(0)) {
+    function emergencyWithdraw(address _token) external onlyOwner {
+        if (_token == address(0)) {
             payable(msg.sender).transfer(address(this).balance);
         } else {
-            uint256 tokenBalance = IERC20(token).balanceOf(address(this));
-            IERC20(token).safeTransfer(msg.sender, tokenBalance);
+            uint256 tokenBalance = IERC20(_token).balanceOf(address(this));
+            IERC20(_token).safeTransfer(msg.sender, tokenBalance);
         }
     }
 

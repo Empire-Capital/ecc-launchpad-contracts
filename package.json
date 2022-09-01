@@ -1,5 +1,5 @@
 {
-  "name": "hardhat-project",
+  "name": "empire-capital-launchpad",
   "scripts": {
     "compile": "hardhat compile"
   },

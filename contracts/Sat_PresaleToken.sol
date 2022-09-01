@@ -41,6 +41,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     mapping(address => uint256) public presaleContribution;
     mapping(uint256 => address) public userContributionAddress;
 
+    /// @param _depositToken The address of the token required to enter the presale
     constructor(address _depositToken) {
         depositToken = _depositToken;
         uint256 depositTokenDecimals = IERC20(depositToken).decimals();
@@ -217,6 +218,12 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     /// @return The minimum amount required to join the presale
     function getPresaleDetails() external view returns (uint256, uint256, uint256, uint256, uint256) {
         return (start, end, softCapAmount, hardCapAmount, presaleMin);
+    }
+
+    /// @dev Returns the sellRate of the contract
+    /// @return The sell rate
+    function getSellRate() external view returns (uint256) {
+        return sellRate;
     }
 
     /*//////////////////////////////////////////////////////////////
