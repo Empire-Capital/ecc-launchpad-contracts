@@ -26,7 +26,6 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     uint256 public cliff = 1 days;
     mapping(address => uint256) public userClaimedAmount;
 
-    // address of the ERC20 token
     IERC20 private immutable token;
     address private presale;
 
@@ -34,7 +33,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
 
     /// @param _token The address of the token that is being vested
     /// @param _presale The address of the presale contract
-    /// @param _totalVestingPercent TODO
+    /// @param _totalVestingPercent The percent of tokens bought in presale that are vested
     constructor(
         address _token,
         address _presale,

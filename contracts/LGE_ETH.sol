@@ -35,14 +35,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     uint256 public lpCreated;
     uint256 public bonusTokens;
     bool public lpLock;
-        // have team transfer ALL tokens into contract
-        // after LGE finishes:
-            // pair raised ETH with liquidityPercent tokens
-            // distribute bonusTokenPercent of tokens + LP created to contributors
-            // transfer back teamPercent of tokens to team address
-
-    // If raise more than softcap ETH, combine all ETH with all liquidityPercent tokens?
-    //  OR pair ETH with liquidityPercentTokens at a set rate. Burn remaining tokens. No remaining tokens at hardcap.
 
     address public projectTeamAddress;
     address public sellToken;
@@ -142,10 +134,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         presaleContribution[user] = 0;
     }
 
-    /// @dev Claims a refund if presale is still active or soft cap was not reached
+    /// @dev Claims a refund if presale soft cap was not reached
     function refund() public nonReentrant {
-        require(status == Status.duringSale ||
-                status == Status.afterSaleFailure, "Presale finished successfully");
+        require(status == Status.afterSaleFailure, "Presale finished successfully");
 
         // Refund deposit tokens
         address user = msg.sender;
@@ -156,41 +147,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         currentPresaleParticipants--;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                           INTERNAL FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-     function internalApprove(address owner, address spender, uint256 amount) internal {
-        require(owner != address(0), "ERC20: Can not approve from zero address");
-        require(spender != address(0), "ERC20: Can not approve to zero address");
-        _allowances[owner][spender] = amount;
-        emit Approval(owner, spender, amount);
-    }
-
-    /// @dev Adds liquidity on the sellToken/ETH pair
-    /// @param The amount of sellToken to add
-    /// @param The amount of ETH to add
-    /// @return The amount of LP tokens created
-    function addLiquidity(uint256 tokenAmount, uint256 amount) internal virtual returns (uint256) {
-        _approve(address(this), address(router), tokenAmount);
-        return (,,liquidity) = router.addLiquidityETH{value: amount}(address(this), tokenAmount, 0, 0, address(this), block.timestamp);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                        ADMIN: PRESALE FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Starts the presale
-    /// @param presaleHours The amount of hours the presale will last for
-    function startPresale(uint256 presaleHours) external onlyOwner {
-        require(status == Status.beforeSale, "Presale is already active");
-        start = block.timestamp;
-        end = block.timestamp + (presaleHours * 1 days);
-    }
-
     /// @notice Raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to team
     /// @dev Ends the presale, preventing new deposits and allowing claims/refunds based on soft cap being met
-    function completePresale() external onlyOwner {
+    function completePresale() external {
         require(status == Status.duringSale, "Presale is not active");
 
         // If presale does not hit their soft cap
@@ -227,6 +186,38 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
             // Transfer tokens allocated to team
             IERC20(sellToken).safeTransfer(projectTeamAddress, teamTokens);
         }
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+     function internalApprove(address owner, address spender, uint256 amount) internal {
+        require(owner != address(0), "ERC20: Can not approve from zero address");
+        require(spender != address(0), "ERC20: Can not approve to zero address");
+        _allowances[owner][spender] = amount;
+        emit Approval(owner, spender, amount);
+    }
+
+    /// @dev Adds liquidity on the sellToken/ETH pair
+    /// @param The amount of sellToken to add
+    /// @param The amount of ETH to add
+    /// @return The amount of LP tokens created
+    function addLiquidity(uint256 tokenAmount, uint256 amount) internal virtual returns (uint256) {
+        _approve(address(this), address(router), tokenAmount);
+        return (,,liquidity) = router.addLiquidityETH{value: amount}(address(this), tokenAmount, 0, 0, address(this), block.timestamp);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        ADMIN: PRESALE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Starts the presale
+    /// @param presaleHours The amount of hours the presale will last for
+    function startPresale(uint256 presaleHours) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        start = block.timestamp;
+        end = block.timestamp + (presaleHours * 1 days);
     }
 
     /// @dev Extends the presale
@@ -382,6 +373,12 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         liquidityPercent = _liquidityPercent;
         bonusTokenPercent = _bonusTokenPercent;
         teamPercent = _teamPercent;
+    }
+
+    /// @dev Updates the values for LP locking
+    /// @param status True = LP created in LGE is locked, else is false
+    function updateLpLock(bool status) external onlyOwner {
+        lpLock = status;
     }
 
 }

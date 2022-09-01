@@ -101,10 +101,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         currentDepositAmount += value;
     }
 
-    /// @dev Claims a refund if presale is still active or soft cap was not reached
+    /// @dev Claims a refund if presale soft cap was not reached
     function refund() public nonReentrant {
-        require(status == Status.duringSale ||
-                status == Status.afterSaleFailure, "Presale finished successfully");
+        require(status == Status.afterSaleFailure, "Presale finished successfully");
 
         // Refund deposited tokens
         address user = msg.sender;
@@ -114,21 +113,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         presaleContribution[user] = 0;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                        ADMIN: PRESALE FUNCTIONS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Starts the presale
-    /// @param presaleHours The amount of hours the presale will last for
-    function startPresale(uint256 presaleHours) external onlyOwner {
-        require(status == Status.beforeSale, "Presale is already active");
-        start = block.timestamp;
-        end = block.timestamp + (presaleHours * 1 hours);
-    }
-
     /// @notice Raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to admin
     /// @dev Ends the presale, preventing new deposits and allowing claims/refunds based on soft cap being met
-    function completePresale() external onlyOwner {
+    function completePresale() external {
         require(status == Status.duringSale, "Presale is not active");
 
         // If presale does not hit their soft cap
@@ -142,6 +129,18 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
             // Transfer deposited tokens from presale to projects admin address
             IERC20(depositToken).safeTransfer(projectAdminAddress, currentDepositAmount);
         }
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        ADMIN: PRESALE FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Starts the presale
+    /// @param presaleHours The amount of hours the presale will last for
+    function startPresale(uint256 presaleHours) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        start = block.timestamp;
+        end = block.timestamp + (presaleHours * 1 hours);
     }
 
     /// @dev Extends the presale
@@ -163,10 +162,6 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         for (uint256 i = 0; i < currentPresaleParticipants; i++) {
             userAddresses[i] = userContributionAddress[i];
             userContributions[i] = presaleContribution[userAddresses[i]];
-
-            // TODO: Cleanup
-            // userAddresses.push(userContributionAddress[i]);
-            // userContributions.push(presaleContribution[user]);
         }
 
         return (userAddresses, userContributions);
