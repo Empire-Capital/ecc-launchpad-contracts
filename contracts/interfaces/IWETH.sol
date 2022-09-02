@@ -1,7 +1,6 @@
-// SPDX-License-Identifier: Unlicense
+// SPDX-License-Identifier: AGPL-3.0
+pragma solidity 0.8.4;
 
-pragma solidity =0.6.8;
-
-interface IWMATIC {
+interface IWETH {
     function deposit() external payable;
 }

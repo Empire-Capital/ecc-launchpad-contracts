@@ -151,7 +151,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
             IERC20(depositToken).safeTransfer(projectTeamAddress, currentDepositAmount);
 
             // Transfer tokens not sold in presale to projects team address
-            uint256 unsoldTokens = currentDepositAmount * sellRate / sellTokenDecimals;
+            uint256 soldTokens = currentDepositAmount * sellRate / sellTokenDecimals;
+            uint256 unsoldTokens = IERC20(sellToken).balanceOf(address(this)) - soldTokens;
             IERC20(sellToken).safeTransfer(projectTeamAddress, unsoldTokens);
 
             // If vesting of tokens is selected, transfer tokens to vesting contract
@@ -335,6 +336,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         require(_vestingPercent <= 10000, "Must be <= 100 percent");
         vestingStatus = _vestingStatus;
         vestingPercent = _vestingPercent;
+        vestingContract = _vestingContract;
     }
 
     /// @dev Transfers any native coin stuck on the contract

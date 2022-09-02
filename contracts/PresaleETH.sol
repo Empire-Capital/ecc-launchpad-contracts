@@ -322,6 +322,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         require(_vestingPercent <= 10000, "Must be <= 100 percent");
         vestingStatus = _vestingStatus;
         vestingPercent = _vestingPercent;
+        vestingContract = _vestingContract;
     }
 
 }

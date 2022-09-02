@@ -1,6 +1,5 @@
-// SPDX-License-Identifier: Unlicense
-
-pragma solidity =0.6.8;
+// SPDX-License-Identifier: AGPL-3.0
+pragma solidity 0.8.4;
 
 enum PairType {Common, LiquidityLocked, SweepableToken0, SweepableToken1}
 
