@@ -34,7 +34,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     uint256 public teamPercent;
     uint256 public lpCreated;
     uint256 public bonusTokens;
-    bool public lpLock;
+    bool public lpLockStatus;
+    uint256 public lpLockDuration;  // 0 = infinite
+    address public lpLockContract;
 
     address public projectTeamAddress;
     address public sellToken;
@@ -178,9 +180,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
             totalRaised = address(this).balance;
             lpCreated = addLiquidity(balanceOf(address(this)), address(this).balance);
 
-            // if router = empireDEX & lpLock = true
-            if(lpLock && empireRouter == address(router)) {
-                // TODO lock liquidity in empire locker 
+            // if router = empireDEX & lpLockStatus = true
+            if(lpLockStatus && empireRouter == address(router)) {
+                IEmpireLocker(lpLockContract).lockLiquidity(pair, projectAdminAddress, lpCreated, lpLockDuration);
             }
 
             // Transfer tokens allocated to team
@@ -376,9 +378,16 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     }
 
     /// @dev Updates the values for LP locking
-    /// @param status True = LP created in LGE is locked, else is false
-    function updateLpLock(bool status) external onlyOwner {
-        lpLock = status;
+    /// @param _lpLockStatus True = LP created in LGE is locked, else is false
+    /// @param _lpLockDuration The duration to lock the LP in seconds. 0 = infinite lock
+    /// @param _lpLockContract The address of the Empire Locker contract
+    function updateLpLock(
+        bool _lpLockStatus,
+        uint256 _lpLockDuration,
+        address _lpLockContract) external onlyOwner {
+        lpLockStatus = _lpLockStatus;
+        lpLockDuration = _lpLockDuration;
+        lpLockContract = _lpLockContract;
     }
 
 }
