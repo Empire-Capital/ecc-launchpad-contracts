@@ -43,6 +43,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     address public lpLockContract;
     address public pair;
 
+    address public projectAdminAddress;
     address public projectTeamAddress;
     address public sellToken;
     uint256 public sellTokenDecimals;
@@ -75,6 +76,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         softCapAmount = 100000 * 10*18; // 100K
         hardCapAmount = 125000 * 10**18; // 125K
         projectTeamAddress = 0x0000000000000000000000000000000000000000; // team address of presale project
+        projectAdminAddress = 0x0000000000000000000000000000000000000000; // Empire Capital
 
         requireTokenAmount = 150000 * 10**18; // 150K
         requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
@@ -160,7 +162,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     /// @notice Raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to team
     /// @dev Ends the presale, preventing new deposits and allowing claims/refunds based on soft cap being met
-    function completePresale() external {
+    function completePresale() external nonReentrant {
         require(status == Status.duringSale, "Presale is not active");
 
         // If presale does not hit their soft cap
@@ -173,6 +175,11 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         // If presale hits their soft cap
         } else {
             status = Status.afterSaleSuccess;
+
+            uint256 totalETH = currentDepositAmount;
+            uint256 liquidtyETH = totalETH * raisedLiqPercent / 10000;
+            uint256 teamETH = totalETH * raisedTeamPercent / 10000;
+            uint256 adminETH = totalETH * raisedAdminPercent / 10000;
 
             uint256 totalSellTokens = IERC20(sellToken).balanceOf(address(this));
             uint256 liquidityTokens = totalSellTokens * liquidityPercent / 10000;
@@ -187,8 +194,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
                 sellToken,
                 router.WETH()
             );
-            require(address(this).balance > 0, "ERC20: Must have ETH on contract to Go Live!");
-            lpCreated = addLiquidity(liquidityTokens, address(this).balance);
+
+            lpCreated = addLiquidity(liquidityTokens, liquidtyETH);
 
             // if router = empireDEX & lpLockStatus = true
             if(lpLockStatus && empireRouter == address(router)) {
@@ -197,6 +204,10 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
             // Transfer tokens allocated to team
             IERC20(sellToken).safeTransfer(projectTeamAddress, teamTokens);
+
+            // Transfer ETH allocated to team + admin
+            payable(projectTeamAddress).sendValue(teamETH);
+            payable(projectAdminAddress).sendValue(adminETH);
         }
     }
 
