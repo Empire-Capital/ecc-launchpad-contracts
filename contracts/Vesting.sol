@@ -11,6 +11,8 @@ interface IPresale {
     function getUserContribution(address _user) external view returns (uint256);
 
     function getSellRate() external view returns (uint256);
+
+    function getVestingInfo() external view returns (bool, uint256);
 }
 
 /// @title Token Vesting
@@ -22,7 +24,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     uint256 public startTime;
     uint256 public endTime;
     uint256 public sellRate; // token amount per ETH
-    uint256 public totalVestingPercent; // div to 10000, so if 10% -> 1000, 67% -> 6700
+    uint256 public totalVestingPercent; // The percent of tokens bought in presale that are vested (1000 = 10%)
     uint256 public cliff = 1 days;
     mapping(address => uint256) public userClaimedAmount;
 
@@ -33,27 +35,16 @@ contract TokenVesting is Ownable, ReentrancyGuard {
 
     /// @param _token The address of the token that is being vested
     /// @param _presale The address of the presale contract
-    /// @param _totalVestingPercent The percent of tokens bought in presale that are vested
     constructor(
         address _token,
-        address _presale,
-        uint256 _totalVestingPercent
+        address _presale
     ) {
         require(_token != address(0));
         require(_presale != address(0));
         token = IERC20(_token);
         presale = _presale;
-        sellRate = IPresale(_token).getSellRate();
-        totalVestingPercent = _totalVestingPercent;
-    }
-
-    /// @dev Sets when the rewards will start and end distribution
-    /// @param start The UNIX time for distributions to begin
-    /// @param end The UNIX time for distributions to end
-    function adminSetTime(uint256 start, uint256 end) external onlyOwner {
-        require(block.timestamp < startTime, "Cannot change after vesting has started");
-        startTime = start;
-        endTime = end;
+        sellRate = IPresale(presale).getSellRate();
+        (,totalVestingPercent) = IPresale(presale).getVestingInfo();
     }
 
     /// @dev Returns the address of the ERC20 token managed by the vesting contract.
@@ -69,7 +60,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         uint256 totalPendingAmount = IPresale(presale)
             .getUserContribution(user)
             * sellRate
-            / totalVestingPercent
+            * totalVestingPercent
             / 10000;
         if (totalPendingAmount == 0) {
             return 0;
@@ -110,4 +101,22 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         }
     }
 
+    /// @dev Sets when the rewards will start and end distribution
+    /// @param start The UNIX time for distributions to begin
+    /// @param end The UNIX time for distributions to end
+    function updateTimes(uint256 start, uint256 end) external onlyOwner {
+        require(block.timestamp < startTime, "Cannot change after vesting has started");
+        startTime = start;
+        endTime = end;
+    }
+
+    /// @notice Any changes to vesting percent should also be made on the presale contract
+    /// @dev Sets the percent of tokens that are to be vested afer a presale
+    /// @param _totalVestingPercent The new vesting percent (1000 = 10%)
+    function updateTotalVestingPercent(uint256 _totalVestingPercent) external onlyOwner {
+        require(block.timestamp < startTime, "Cannot change after vesting has started");
+        require(_totalVestingPercent <= 10000, "Must be <= 100 percent");
+        totalVestingPercent = _totalVestingPercent;
+    }
+ 
 }

@@ -39,6 +39,9 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     address public requireToken;
     bool public requireTokenStatus;
     bool public crossChainPresale;
+    bool public vestingStatus;
+    uint256 public vestingPercent;
+    address public vestingContract;
 
     mapping(address => uint256) public presaleContribution;
 
@@ -150,6 +153,12 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
             // Transfer tokens not sold in presale to projects team address
             uint256 unsoldTokens = currentDepositAmount * sellRate / sellTokenDecimals;
             IERC20(sellToken).safeTransfer(projectTeamAddress, unsoldTokens);
+
+            // If vesting of tokens is selected, transfer tokens to vesting contract
+            if (vestingStatus) {
+                uint256 tokensVesting = soldTokens * vestingPercent / 10000;
+                IERC20(sellToken).safeTransfer(vestingContract, tokensVesting);
+            }
         }
     }
 
@@ -248,6 +257,13 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         return sellRate;
     }
 
+    /// @dev Returns information about the vesting of presale tokens
+    /// @return True if tokens are vested after presale ends, else false
+    /// @return The percent of tokens vested, remaining percent is claimable on successful presale finish
+    function getVestinInfo() external view returns (bool, uint256) {
+        return (vestingStatus, vestingPercent);
+    }
+
     /*//////////////////////////////////////////////////////////////
                         ADMIN: UPDATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -305,6 +321,20 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         requireTokenAmount = _amount;
         requireToken = _token;
         requireTokenStatus = _status;
+    }
+
+    /// @dev Updates the information for vesting after a successful presale
+    /// @param _vestingStatus Toggles if tokens are vested
+    /// @param _vestingPercent The percent of tokens to be vested (1000 = 10%)
+    /// @param _vestingContract The address of the vesting contract
+    function updateVestingInfo(
+        bool _vestingStatus,
+        uint256 _vestingPercent,
+        address _vestingContract) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        require(_vestingPercent <= 10000, "Must be <= 100 percent");
+        vestingStatus = _vestingStatus;
+        vestingPercent = _vestingPercent;
     }
 
     /// @dev Transfers any native coin stuck on the contract
