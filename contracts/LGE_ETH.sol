@@ -10,6 +10,7 @@ import "./interfaces/IERC20.sol";
 import "./interfaces/IEmpireFactory.sol";
 import "./interfaces/IEmpirePair.sol";
 import "./interfaces/IEmpireRouter.sol";
+import "./interfaces/IEmpireLocker.sol";
 import "./interfaces/IWETH.sol";
 
 /// @title Liquidity Generation Event ETH
@@ -37,6 +38,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     bool public lpLockStatus;
     uint256 public lpLockDuration;  // 0 = infinite
     address public lpLockContract;
+    address public pair;
 
     address public projectTeamAddress;
     address public sellToken;
@@ -90,7 +92,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
     /// @notice Deposits `msg.value` into the presale
     /// @dev Enters the presale
-    function deposit() external payable nonReentrant {
+    function deposit() public payable nonReentrant {
         uint256 value = msg.value;
         address user = msg.sender;
         require(
@@ -172,12 +174,11 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
 
             // create liquidity
             internalApprove(address(this), address(router), _totalSupply);
-            pair = IEmpireFactory(_router.factory()).createPair(
+            pair = IEmpireFactory(router.factory()).createPair(
                 address(this),
-                _router.WETH()
+                router.WETH()
             );
             require(address(this).balance > 0, "ERC20: Must have ETH on contract to Go Live!");
-            totalRaised = address(this).balance;
             lpCreated = addLiquidity(balanceOf(address(this)), address(this).balance);
 
             // if router = empireDEX & lpLockStatus = true
@@ -202,8 +203,8 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     }
 
     /// @dev Adds liquidity on the sellToken/ETH pair
-    /// @param The amount of sellToken to add
-    /// @param The amount of ETH to add
+    /// @param tokenAmount The amount of sellToken to add
+    /// @param amount The amount of ETH to add
     /// @return The amount of LP tokens created
     function addLiquidity(uint256 tokenAmount, uint256 amount) internal virtual returns (uint256) {
         _approve(address(this), address(router), tokenAmount);
@@ -385,6 +386,7 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         bool _lpLockStatus,
         uint256 _lpLockDuration,
         address _lpLockContract) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is active");
         lpLockStatus = _lpLockStatus;
         lpLockDuration = _lpLockDuration;
         lpLockContract = _lpLockContract;

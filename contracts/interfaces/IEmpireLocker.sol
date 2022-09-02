@@ -3,7 +3,7 @@ pragma solidity 0.8.4;
 
 import "./IERC20.sol";
 
-interface IEmpireEscrow {
+interface IEmpireLocker {
     struct Escrow {
         uint256 amount;
         uint256 release;
