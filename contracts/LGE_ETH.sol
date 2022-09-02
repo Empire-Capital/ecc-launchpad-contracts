@@ -167,23 +167,25 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         } else {
             status = Status.afterSaleSuccess;
 
-            uint256 totalSellTokens = sellToken.balanceOf(address(this));
+            uint256 totalSellTokens = IERC20(sellToken).balanceOf(address(this));
             uint256 liquidityTokens = totalSellTokens * liquidityPercent / 10000;
             uint256 teamTokens = totalSellTokens * teamPercent / 10000;
             bonusTokens = totalSellTokens * bonusTokenPercent / 10000;
 
             // create liquidity
-            internalApprove(address(this), address(router), _totalSupply);
+            // internalApprove(address(this), address(router), _totalSupply); REMOVE?
+            IERC20(sellToken).approve(address(router), IERC20(sellToken).totalSupply());
+
             pair = IEmpireFactory(router.factory()).createPair(
-                address(this),
+                sellToken,
                 router.WETH()
             );
             require(address(this).balance > 0, "ERC20: Must have ETH on contract to Go Live!");
-            lpCreated = addLiquidity(balanceOf(address(this)), address(this).balance);
+            lpCreated = addLiquidity(liquidityTokens, address(this).balance);
 
             // if router = empireDEX & lpLockStatus = true
             if(lpLockStatus && empireRouter == address(router)) {
-                IEmpireLocker(lpLockContract).lockLiquidity(pair, projectAdminAddress, lpCreated, lpLockDuration);
+                IEmpireLocker(lpLockContract).lockLiquidity(IERC20(pair), projectTeamAddress, lpCreated, lpLockDuration);
             }
 
             // Transfer tokens allocated to team
@@ -195,20 +197,22 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-     function internalApprove(address owner, address spender, uint256 amount) internal {
-        require(owner != address(0), "ERC20: Can not approve from zero address");
-        require(spender != address(0), "ERC20: Can not approve to zero address");
-        _allowances[owner][spender] = amount;
-        emit Approval(owner, spender, amount);
-    }
+    //  function internalApprove(address owner, address spender, uint256 amount) internal {
+    //     require(owner != address(0), "ERC20: Can not approve from zero address");
+    //     require(spender != address(0), "ERC20: Can not approve to zero address");
+    //     _allowances[owner][spender] = amount;
+    //     emit Approval(owner, spender, amount);
+    // }
 
     /// @dev Adds liquidity on the sellToken/ETH pair
     /// @param tokenAmount The amount of sellToken to add
     /// @param amount The amount of ETH to add
     /// @return The amount of LP tokens created
     function addLiquidity(uint256 tokenAmount, uint256 amount) internal virtual returns (uint256) {
-        _approve(address(this), address(router), tokenAmount);
-        return (,,liquidity) = router.addLiquidityETH{value: amount}(address(this), tokenAmount, 0, 0, address(this), block.timestamp);
+        // IERC20(sellToken).approve(router, tokenAmount); REMOVE?
+        uint256 liquidity;
+        (,, liquidity) = router.addLiquidityETH{value: amount}(address(this), tokenAmount, 0, 0, address(this), block.timestamp);
+        return liquidity;
     }
 
     /*//////////////////////////////////////////////////////////////
