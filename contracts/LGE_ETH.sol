@@ -30,9 +30,12 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
     Status public status;
 
     // LGE Vars
-    uint256 public liquidityPercent;
-    uint256 public bonusTokenPercent;
-    uint256 public teamPercent;
+    uint256 public raisedLiqPercent;    // 1000 = 10%
+    uint256 public raisedTeamPercent;   // 1000 = 10%
+    uint256 public raisedAdminPercent;  // 1000 = 10%
+    uint256 public liquidityPercent;    // 1000 = 10%
+    uint256 public bonusTokenPercent;   // 1000 = 10%
+    uint256 public teamPercent;         // 1000 = 10%
     uint256 public lpCreated;
     uint256 public bonusTokens;
     bool public lpLockStatus;
@@ -76,6 +79,10 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         requireTokenAmount = 150000 * 10**18; // 150K
         requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
         requireTokenStatus = false; // false = no requirements, true = holding token required to join
+
+        raisedLiqPercent = 10000;   // 100%
+        raisedTeamPercent = 0;
+        raisedAdminPercent = 0;
 
         crossChainPresale = false; // false = presale on one chain, true = presale on multiple chains
 
@@ -376,10 +383,26 @@ contract PresaleBUSD is Ownable, ReentrancyGuard {
         uint256 _teamPercent
     ) external onlyOwner {
         require(status == Status.beforeSale, "Presale is active");
-        require(_liquidityPercent + _bonusTokenPercent + _teamPercent == 10000);
+        require(_liquidityPercent + _bonusTokenPercent + _teamPercent == 10000, "Must total to 100%");
         liquidityPercent = _liquidityPercent;
         bonusTokenPercent = _bonusTokenPercent;
         teamPercent = _teamPercent;
+    }
+
+    /// @dev Updates the percent values to determine how raised ETH is split
+    /// @param _raisedLiqPercent The new percent of ETH to use to make liquidity
+    /// @param _raisedTeamPercent The new percent of ETH to transfer to projects team
+    /// @param _raisedAdminPercent The new percent of ETH to transfer to Empire Capital
+    function updateRaisedSplitPercents(
+        uint256 _raisedLiqPercent,
+        uint256 _raisedTeamPercent,
+        uint256 _raisedAdminPercent
+    ) external onlyOwner {
+        require(status == Status.beforeSale, "Presale is active");
+        require(_raisedLiqPercent + _raisedTeamPercent + _raisedAdminPercent == 10000, "Must total to 100%");
+        raisedLiqPercent = _raisedLiqPercent;
+        raisedTeamPercent = _raisedTeamPercent;
+        raisedAdminPercent = _raisedAdminPercent;
     }
 
     /// @dev Updates the values for LP locking
