@@ -9,6 +9,7 @@ import { Signer, Wallet, BigNumber} from "ethers";
 // Typechain Setup
 let presaleETH: PresaleETH;
 let sellToken: MockERC20;
+let requireToken: MockERC20;
 let weth: MockWETH;
 
 let owner: SignerWithAddress;
@@ -21,6 +22,10 @@ beforeEach(async () => {
     // Deploy SellToken
     sellToken = (await (await ethers.getContractFactory("MockERC20")).deploy()) as MockERC20;
     await sellToken.deployed();
+
+    // Deploy RequireToken
+    requireToken = (await (await ethers.getContractFactory("MockERC20")).deploy()) as MockERC20;
+    await requireToken.deployed();
 
     // Deploy LGE
     presaleETH = (await (await ethers.getContractFactory("PresaleETH")).deploy(sellToken.address)) as PresaleETH;

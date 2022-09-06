@@ -1,7 +1,10 @@
 {
   "name": "empire-capital-launchpad",
   "scripts": {
-    "compile": "hardhat compile"
+    "compile": "hardhat compile",
+    "tsc": "tsc -p . && cp typechain/*.d.ts dist/typechain/",
+    "clean": "hardhat clean",
+    "build": "yarn compile && yarn tsc"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.5",

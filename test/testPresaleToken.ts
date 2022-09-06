@@ -10,12 +10,25 @@ import { Signer, Wallet, BigNumber} from "ethers";
 let presaleToken: PresaleToken;
 let depositToken: MockERC20;
 let sellToken: MockERC20;
+let requireToken: MockERC20;
 let weth: MockWETH;
 
 let owner: SignerWithAddress;
 let user: SignerWithAddress;
 
-// Variebls Setup
+// Variables Setup
+const sellRate = 1;
+const presaleMin = ethers.utils.parseEther("1000");
+const softCapAmount = ethers.utils.parseEther("100000");
+const hardCapAmount = ethers.utils.parseEther("125000");
+const projectTeamAddress = "0x";
+const projectAdminAddress = "0x";
+
+const requireTokenAmount = ethers.utils.parseEther("150000");
+const requireTokenAddress = "0x";
+const requireTokenStatus = false;
+
+const crossChainPresale = false;
 
 beforeEach(async () => {
 
@@ -29,6 +42,10 @@ beforeEach(async () => {
     sellToken = (await (await ethers.getContractFactory("MockERC20")).deploy()) as MockERC20;
     await sellToken.deployed();
 
+    // Deploy RequireToken
+    requireToken = (await (await ethers.getContractFactory("MockERC20")).deploy()) as MockERC20;
+    await requireToken.deployed();
+
     // Deploy LGE
     presaleToken = (await (await ethers.getContractFactory("PresaleToken")).deploy(depositToken.address, sellToken.address)) as PresaleToken;
     await presaleToken.deployed();
@@ -38,51 +55,55 @@ beforeEach(async () => {
 describe("Should deploy contract correctly", async () => {
 
     it("Should set depositToken correctly", async () => {
-
+        expect(await presaleToken.sellToken()).to.be.equal(sellToken.address);
     });
 
     it("Should set sellToken correctly", async () => {
-
+        expect(await presaleToken.sellToken()).to.be.equal(sellToken.address);
     });
 
     it("Should set sellTokenDecimals correctly", async () => {
-
+        expect(await presaleToken.sellTokenDecimals()).to.be.equal(await sellToken.decimals());
     });
 
     it("Should set sellRate correctly", async () => {
-
+        expect(await presaleToken.sellRate()).to.be.equal(sellRate);
     });
 
     it("Should set presaleMin correctly", async () => {
-
+        expect(await presaleToken.presaleMin()).to.be.equal(presaleMin);
     });
 
     it("Should set softCapAmount correctly", async () => {
-
+        expect(await presaleToken.softCapAmount()).to.be.equal(softCapAmount);
     });
 
     it("Should set hardCapAmount correctly", async () => {
-
+        expect(await presaleToken.hardCapAmount()).to.be.equal(hardCapAmount);
     });
 
     it("Should set projectTeamAddress correctly", async () => {
+        expect(await presaleToken.projectTeamAddress()).to.be.equal(projectTeamAddress);
+    });
 
+    it("Should set projectAdminAddress to Empire Capital", async () => {
+        expect(await presaleToken.projectAdminAddress()).to.be.equal(projectAdminAddress);
     });
 
     it("Should set requireTokenAmount correctly", async () => {
-
+        expect(await presaleToken.requireTokenAmount()).to.be.equal(requireTokenAmount);
     });
 
     it("Should set requireToken correctly", async () => {
-
+        expect(await presaleToken.requireToken()).to.be.equal(requireTokenAddress);
     });
 
     it("Should set requireTokenStatus correctly", async () => {
-
+        expect(await presaleToken.requireTokenStatus()).to.be.equal(requireTokenStatus);
     });
 
     it("Should set crossChainPresale correctly", async () => {
-
+        expect(await presaleToken.crossChainPresale()).to.be.equal(crossChainPresale);
     });
 
 });

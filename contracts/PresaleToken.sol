@@ -25,6 +25,7 @@ contract PresaleToken is Ownable, ReentrancyGuard {
 
     address public projectTeamAddress;
     address public depositToken;
+    uint256 public depositTokenDecimals;
     address public sellToken;
     uint256 public sellTokenDecimals;
     uint256 public currentDepositAmount;
@@ -49,7 +50,7 @@ contract PresaleToken is Ownable, ReentrancyGuard {
     /// @param _sellToken The address of the token being sold in the presale
     constructor(address _depositToken, address _sellToken) {
         depositToken = _depositToken;
-        uint256 depositTokenDecimals = IERC20(depositToken).decimals();
+        depositTokenDecimals = IERC20(depositToken).decimals();
         sellToken = _sellToken;
         sellTokenDecimals = IERC20(sellToken).decimals();
 
@@ -295,7 +296,14 @@ contract PresaleToken is Ownable, ReentrancyGuard {
     /// @param _depositToken The address of the new token to be deposited
     function updateDepositToken(address _depositToken) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
+        presaleMin = presaleMin / 10**depositTokenDecimals;
+        softCapAmount = softCapAmount / 10*depositTokenDecimals;
+        hardCapAmount = hardCapAmount / 10**depositTokenDecimals;
         depositToken = _depositToken;
+        depositTokenDecimals = IERC20(depositToken).decimals();
+        presaleMin = presaleMin * 10**depositTokenDecimals;
+        softCapAmount = softCapAmount * 10*depositTokenDecimals;
+        hardCapAmount = hardCapAmount * 10**depositTokenDecimals;
     }
 
     /// @notice At sellRate = 10, then 1 depositToken returns 10 sellToken
