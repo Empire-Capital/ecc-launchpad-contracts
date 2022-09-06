@@ -8,9 +8,9 @@ import "./libraries/SafeERC20.sol";
 import "./interfaces/IERC20.sol";
 
 /// @title PresaleETH
-/// @author Empire Capital
+/// @author Empire Capital (Tranquil Flow, Splnty)
 /// @dev A contract for presales that accepts native coins
-contract PresaleBUSD is Ownable, ReentrancyGuard {
+contract PresaleETH is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address payable;
 

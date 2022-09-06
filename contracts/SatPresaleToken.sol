@@ -7,10 +7,10 @@ import "./libraries/ReentrancyGuard.sol";
 import "./libraries/SafeERC20.sol";
 import "./interfaces/IERC20.sol";
 
-/// @title PresaleToken
+/// @title Satellite PresaleToken
 /// @author Empire Capital (Tranquil Flow, Splnty)
-/// @dev A contract for presales that accepts tokens
-contract PresaleToken is Ownable, ReentrancyGuard {
+/// @dev A contract for presales that accepts tokens, for the non-launch chain
+contract SatPresaleToken is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using Address for address payable;
 
@@ -23,9 +23,8 @@ contract PresaleToken is Ownable, ReentrancyGuard {
 
     Status public status;
 
-    address public projectTeamAddress;
+    address public projectAdminAddress;
     address public depositToken;
-    address public sellToken;
     uint256 public sellTokenDecimals;
     uint256 public currentDepositAmount;
     uint256 public currentPresaleParticipants;
@@ -38,35 +37,28 @@ contract PresaleToken is Ownable, ReentrancyGuard {
     uint256 public requireTokenAmount;
     address public requireToken;
     bool public requireTokenStatus;
-    bool public crossChainPresale;
-    bool public vestingStatus;
-    uint256 public vestingPercent;
-    address public vestingContract;
 
     mapping(address => uint256) public presaleContribution;
+    mapping(uint256 => address) public userContributionAddress;
 
     /// @param _depositToken The address of the token required to enter the presale
-    /// @param _sellToken The address of the token being sold in the presale
-    constructor(address _depositToken, address _sellToken) {
+    /// @param _sellTokenDecimals The amount of decimals of the sellToken
+    constructor(address _depositToken, uint256 _sellTokenDecimals) {
         depositToken = _depositToken;
         uint256 depositTokenDecimals = IERC20(depositToken).decimals();
-        sellToken = _sellToken;
-        sellTokenDecimals = IERC20(sellToken).decimals();
+        sellTokenDecimals = _sellTokenDecimals;
 
         sellRate = 1; // X sellToken per 1 depositToken
         presaleMin = 1000 * 10**depositTokenDecimals; // 1K
         softCapAmount = 100000 * 10*depositTokenDecimals; // 100K
         hardCapAmount = 125000 * 10**depositTokenDecimals; // 125K
-        projectTeamAddress = 0x0000000000000000000000000000000000000000; // team address of presale project
+        projectAdminAddress = 0x0000000000000000000000000000000000000000; // admin of presale project
 
         requireTokenAmount = 150000 * 10**18; // 150K
         requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
         requireTokenStatus = false; // false = no requirements, true = holding token required to join
 
-        crossChainPresale = false; // false = presale on one chain, true = presale on multiple chains
     }
-
-
 
     /*//////////////////////////////////////////////////////////////
                             USER FUNCTIONS
@@ -104,19 +96,8 @@ contract PresaleToken is Ownable, ReentrancyGuard {
 
         //Record and account the depositToken entered into presale
         presaleContribution[user] += value;
+        userContributionAddress[currentPresaleParticipants] = msg.sender;
         currentDepositAmount += value;
-    }
-
-    /// @dev Claims tokens after the presale is finished
-    function claim() external nonReentrant {
-        require(status == Status.afterSaleSuccess, "Presale is still active");
-
-        address user = msg.sender;
-        uint256 currentAmount = presaleContribution[user];
-        require(currentAmount > 0, "Have not contributed to presale");
-        uint256 amount = currentAmount * sellRate / sellTokenDecimals;
-        IERC20(sellToken).safeTransfer(user, amount);
-        presaleContribution[user] = 0;
     }
 
     /// @dev Claims a refund if presale soft cap was not reached
@@ -131,7 +112,7 @@ contract PresaleToken is Ownable, ReentrancyGuard {
         presaleContribution[user] = 0;
     }
 
-    /// @notice Raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to team
+    /// @notice Raised amount < softcap = refunds enabled, otherwise claims enabled + raised funds transferred to admin
     /// @dev Ends the presale, preventing new deposits and allowing claims/refunds based on soft cap being met
     function completePresale() external {
         require(status == Status.duringSale, "Presale is not active");
@@ -140,26 +121,12 @@ contract PresaleToken is Ownable, ReentrancyGuard {
         if (currentDepositAmount < softCapAmount) {
             status = Status.afterSaleFailure;
 
-            uint256 unsoldTokens = IERC20(sellToken).balanceOf(address(this));
-            IERC20(sellToken).safeTransfer(projectTeamAddress, unsoldTokens);
-
         // If presale hits their soft cap
         } else {
             status = Status.afterSaleSuccess;
            
-            // Transfer deposited tokens from presale to projects team address
-            IERC20(depositToken).safeTransfer(projectTeamAddress, currentDepositAmount);
-
-            // Transfer tokens not sold in presale to projects team address
-            uint256 soldTokens = currentDepositAmount * sellRate / sellTokenDecimals;
-            uint256 unsoldTokens = IERC20(sellToken).balanceOf(address(this)) - soldTokens;
-            IERC20(sellToken).safeTransfer(projectTeamAddress, unsoldTokens);
-
-            // If vesting of tokens is selected, transfer tokens to vesting contract
-            if (vestingStatus) {
-                uint256 tokensVesting = soldTokens * vestingPercent / 10000;
-                IERC20(sellToken).safeTransfer(vestingContract, tokensVesting);
-            }
+            // Transfer deposited tokens from presale to admin
+            IERC20(depositToken).safeTransfer(projectAdminAddress, currentDepositAmount);
         }
     }
 
@@ -183,25 +150,20 @@ contract PresaleToken is Ownable, ReentrancyGuard {
         end = _end;
     }
 
-    /// @dev Updates the amount of tokens an address contributed in the presale on another chain
-    /// @param _address The array of addresses
-    /// @param _amount The array of contribution amount the addresses
-    function updateCrossChainBalances(
-        address[] calldata _address,
-        uint256[] calldata _amount
-    ) external onlyOwner {
-        require(crossChainPresale, "Presale not cross chain");
-        require(status == Status.beforeSale ||
-                status == Status.duringSale, "Presale finished already");
-        //Transfer depositToken to contract manually from other chain
-        for (uint256 i = 0; i < _address.length; i++) {
-            if (presaleContribution[_address[i]] == 0) {
-                currentPresaleParticipants++;
-            }
+    /// @dev Returns the amount of tokens all addresses contributed in the presale on this chain
+    /// @return The array of addresses
+    /// @return The array of contribution amount the addresses
+    function returnUserContributions() external onlyOwner view returns (address[] memory, uint256[] memory) {
 
-            presaleContribution[_address[i]] += _amount[i];
-            currentDepositAmount += _amount[i];
+        address[] memory userAddresses;
+        uint256[] memory userContributions;
+
+        for (uint256 i = 0; i < currentPresaleParticipants; i++) {
+            userAddresses[i] = userContributionAddress[i];
+            userContributions[i] = presaleContribution[userAddresses[i]];
         }
+
+        return (userAddresses, userContributions);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -258,13 +220,6 @@ contract PresaleToken is Ownable, ReentrancyGuard {
         return sellRate;
     }
 
-    /// @dev Returns information about the vesting of presale tokens
-    /// @return True if tokens are vested after presale ends, else false
-    /// @return The percent of tokens vested, remaining percent is claimable on successful presale finish
-    function getVestinInfo() external view returns (bool, uint256) {
-        return (vestingStatus, vestingPercent);
-    }
-
     /*//////////////////////////////////////////////////////////////
                         ADMIN: UPDATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
@@ -283,12 +238,11 @@ contract PresaleToken is Ownable, ReentrancyGuard {
         hardCapAmount = _hardCapAmount;
     }
 
-    /// @dev Updates the token that is sold in the presale
-    /// @param _sellTokenAddress The address of the new token to be sold
-    function updateSellToken(address _sellTokenAddress) external onlyOwner {
+    /// @dev Updates the token decimals that is sold in the presale
+    /// @param _sellTokenDecimals The address of the new token to be sold
+    function updateSellToken(uint256 _sellTokenDecimals) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
-        sellToken = _sellTokenAddress;
-        sellTokenDecimals = IERC20(sellToken).decimals();
+        sellTokenDecimals = _sellTokenDecimals;
     }
 
     /// @dev Updates the token to be deposited into the presale
@@ -322,21 +276,6 @@ contract PresaleToken is Ownable, ReentrancyGuard {
         requireTokenAmount = _amount;
         requireToken = _token;
         requireTokenStatus = _status;
-    }
-
-    /// @dev Updates the information for vesting after a successful presale
-    /// @param _vestingStatus Toggles if tokens are vested
-    /// @param _vestingPercent The percent of tokens to be vested (1000 = 10%)
-    /// @param _vestingContract The address of the vesting contract
-    function updateVestingInfo(
-        bool _vestingStatus,
-        uint256 _vestingPercent,
-        address _vestingContract) external onlyOwner {
-        require(status == Status.beforeSale, "Presale is already active");
-        require(_vestingPercent <= 10000, "Must be <= 100 percent");
-        vestingStatus = _vestingStatus;
-        vestingPercent = _vestingPercent;
-        vestingContract = _vestingContract;
     }
 
     /// @dev Transfers any native coin stuck on the contract

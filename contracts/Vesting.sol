@@ -16,7 +16,7 @@ interface IPresale {
 }
 
 /// @title Token Vesting
-/// @author Empire Capital
+/// @author Empire Capital (Tranquil Flow, Splnty)
 /// @dev A vesting contract for locking up tokens to be distributed over time
 contract TokenVesting is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
