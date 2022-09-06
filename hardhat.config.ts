@@ -21,13 +21,28 @@ const deployerKey = process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.4",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 1000
-      }
-    }
+    compilers: [
+      {
+        version: "0.4.18"
+      },
+      {
+        version: "0.6.8",
+        settings: {
+          optimizer: {
+            enabled: true,
+          }
+        },
+      },
+      {
+        version: "0.8.4",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 1000
+          }
+        },
+      },
+    ]
   },
   networks: {
     rinkeby: {
