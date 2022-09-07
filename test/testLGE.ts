@@ -25,11 +25,11 @@ const sellRate = 1;
 const presaleMin = ethers.utils.parseEther("1000");
 const softCapAmount = ethers.utils.parseEther("100000");
 const hardCapAmount = ethers.utils.parseEther("125000");
-const projectTeamAddress = "0x";
-const projectAdminAddress = "0x";
+const projectTeamAddress = "0x0000000000000000000000000000000000000000";
+const projectAdminAddress = "0x0000000000000000000000000000000000000000";
 
 const requireTokenAmount = ethers.utils.parseEther("150000");
-const requireTokenAddress = "0x";
+const requireTokenAddress = "0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55";
 const requireTokenStatus = false;
 
 const raisedLiqPercent = 10000;     // 100%
@@ -38,7 +38,7 @@ const raisedAdminPercent = 0;       // 0%
 
 const crossChainPresale = false;
 
-const router = "0x";
+const router = "0xCfAA4334ec6d5bBCB597e227c28D84bC52d5B5A4";
 
 beforeEach(async () => {
 
@@ -89,126 +89,135 @@ describe("Should deploy contract correctly", async () => {
     });
 
     it("Should set presaleMin correctly", async () => {
-
+        expect(await lge.presaleMin()).to.be.equal(presaleMin);
     });
 
     it("Should set softCapAmount correctly", async () => {
-
+        expect(await lge.softCapAmount()).to.be.equal(softCapAmount);
     });
 
     it("Should set hardCapAmount correctly", async () => {
-
+        expect(await lge.hardCapAmount()).to.be.equal(hardCapAmount);
     });
 
     it("Should set projectTeamAddress correctly", async () => {
-
+        expect(await lge.projectTeamAddress()).to.be.equal(projectTeamAddress);
     });
 
     it("Should set projectAdminAddress to Empire Capital", async () => {
-
+        expect(await lge.projectAdminAddress()).to.be.equal(projectAdminAddress);
     });
 
     it("Should set requireTokenAmount correctly", async () => {
-
+        expect(await lge.requireTokenAmount()).to.be.equal(requireTokenAmount);
     });
 
     it("Should set requireToken correctly", async () => {
-
+        expect(await lge.requireToken()).to.be.equal(requireTokenAddress);
     });
 
     it("Should set requireTokenStatus correctly", async () => {
-
+        expect(await lge.requireTokenStatus()).to.be.equal(requireTokenStatus);
     });
 
     it("Should set crossChainPresale correctly", async () => {
-
+        expect(await lge.crossChainPresale()).to.be.equal(crossChainPresale);
     });
    
     it("Should set raisedLiqPercent correctly", async () => {
-
+        expect(await lge.raisedLiqPercent()).to.be.equal(raisedLiqPercent);
     });
 
     it("Should set raisedTeamPercent correctly", async () => {
-
+        expect(await lge.raisedTeamPercent()).to.be.equal(raisedTeamPercent);
     });
 
     it("Should set raisedAdminPercent correctly", async () => {
-
+        expect(await lge.raisedAdminPercent()).to.be.equal(raisedAdminPercent);
     });
 
     it("Should set router correctly", async () => {
-
+        expect(await lge.router()).to.be.equal(router);
     });
 
 });
 
-describe("Should perform LGE correctly for user functions", async () => {
+// describe("Should perform LGE correctly for user functions", async () => {
 
-    describe("function: deposit works correctly", async () => {
+//     describe("function: deposit works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: claim works correctly", async () => {
+//     describe("function: claim works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
    
-    describe("function: claim works correctly", async () => {
+//     describe("function: claim works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: completePresale works correctly", async () => {
+//     describe("function: completePresale works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-});
+// });
 
-describe("Should perform LGE correctly for admin functions", async () => {
+// describe("Should perform LGE correctly for admin functions", async () => {
 
-    describe("function: startPresale works correctly", async () => {
+//     describe("function: startPresale works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: extendPresale works correctly", async () => {
+//     describe("function: extendPresale works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
    
-    describe("function: updateCrossChainBalances works correctly", async () => {
+//     describe("function: updateCrossChainBalances works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-});
+// });
 
 describe("Should perform admin update variable functions correctly", async () => {
 
     describe("function: updateSoftCapAmount works correctly", async () => {
+
+        it("Should only be callable when Status.beforeSale", async () => {
+            console.log(await lge.getSaleStatus());
+            await expect(lge.updateSoftCapAmount(1)).to.not.be.reverted;
+            await lge.startPresale(1);
+            console.log(await lge.getSaleStatus());
+            await expect(lge.status()).to.be.equal(0);
+            await expect(lge.updateSoftCapAmount(1)).to.be.reverted;
+        });
 
         it("Should ###", async () => {
 
@@ -217,6 +226,9 @@ describe("Should perform admin update variable functions correctly", async () =>
     });
 
     describe("function: updateHardCapAmount works correctly", async () => {
+
+        it("Should only be callable when Status.beforeSale", async () => {
+        });
 
         it("Should ###", async () => {
 

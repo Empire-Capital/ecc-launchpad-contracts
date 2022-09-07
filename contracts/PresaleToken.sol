@@ -56,7 +56,7 @@ contract PresaleToken is Ownable, ReentrancyGuard {
 
         sellRate = 1; // X sellToken per 1 depositToken
         presaleMin = 1000 * 10**depositTokenDecimals; // 1K
-        softCapAmount = 100000 * 10*depositTokenDecimals; // 100K
+        softCapAmount = 100000 * 10**depositTokenDecimals; // 100K
         hardCapAmount = 125000 * 10**depositTokenDecimals; // 125K
         projectTeamAddress = 0x0000000000000000000000000000000000000000; // team address of presale project
 

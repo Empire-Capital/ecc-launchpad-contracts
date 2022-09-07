@@ -21,11 +21,10 @@ const sellRate = 1;
 const presaleMin = ethers.utils.parseEther("1000");
 const softCapAmount = ethers.utils.parseEther("100000");
 const hardCapAmount = ethers.utils.parseEther("125000");
-const projectTeamAddress = "0x";
-const projectAdminAddress = "0x";
+const projectTeamAddress = "0x0000000000000000000000000000000000000000";
 
 const requireTokenAmount = ethers.utils.parseEther("150000");
-const requireTokenAddress = "0x";
+const requireTokenAddress = "0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55";
 const requireTokenStatus = false;
 
 const crossChainPresale = false;
@@ -86,10 +85,6 @@ describe("Should deploy contract correctly", async () => {
         expect(await presaleToken.projectTeamAddress()).to.be.equal(projectTeamAddress);
     });
 
-    it("Should set projectAdminAddress to Empire Capital", async () => {
-        expect(await presaleToken.projectAdminAddress()).to.be.equal(projectAdminAddress);
-    });
-
     it("Should set requireTokenAmount correctly", async () => {
         expect(await presaleToken.requireTokenAmount()).to.be.equal(requireTokenAmount);
     });
@@ -108,134 +103,134 @@ describe("Should deploy contract correctly", async () => {
 
 });
 
-describe("Should perform presale correctly for user functions", async () => {
+// describe("Should perform presale correctly for user functions", async () => {
 
-    describe("function: deposit works correctly", async () => {
+//     describe("function: deposit works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: claim works correctly", async () => {
+//     describe("function: claim works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
    
-    describe("function: claim works correctly", async () => {
+//     describe("function: claim works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: completePresale works correctly", async () => {
+//     describe("function: completePresale works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
     
-});
+// });
 
-describe("Should perform presale correctly for admin functions", async () => {
+// describe("Should perform presale correctly for admin functions", async () => {
 
-    describe("function: startPresale works correctly", async () => {
+//     describe("function: startPresale works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: extendPresale works correctly", async () => {
+//     describe("function: extendPresale works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
    
-    describe("function: updateCrossChainBalances works correctly", async () => {
+//     describe("function: updateCrossChainBalances works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-});
+// });
 
-describe("Should perform admin update variable functions correctly", async () => {
+// describe("Should perform admin update variable functions correctly", async () => {
 
-    describe("function: updateSoftCapAmount works correctly", async () => {
+//     describe("function: updateSoftCapAmount works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: updateHardCapAmount works correctly", async () => {
+//     describe("function: updateHardCapAmount works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
    
-    describe("function: updateSellToken works correctly", async () => {
+//     describe("function: updateSellToken works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: updateSellRate works correctly", async () => {
+//     describe("function: updateSellRate works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: updateMin works correctly", async () => {
+//     describe("function: updateMin works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
    
-    describe("function: updateRequiredToken works correctly", async () => {
+//     describe("function: updateRequiredToken works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: updateVestingInfo works correctly", async () => {
+//     describe("function: updateVestingInfo works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should ###", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-});
+// });
 
-describe("Should perform function: recoverNative correctly", async () => {
+// describe("Should perform function: recoverNative correctly", async () => {
 
-    it("Should ###", async () => {
+//     it("Should ###", async () => {
 
-    });
+//     });
     
-});
+// });
