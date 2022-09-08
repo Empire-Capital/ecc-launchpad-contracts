@@ -174,6 +174,7 @@ contract PresaleToken is Ownable, ReentrancyGuard {
         require(status == Status.beforeSale, "Presale is already active");
         start = block.timestamp;
         end = block.timestamp + (presaleHours * 1 hours);
+        status = Status.duringSale;
     }
 
     /// @dev Extends the presale

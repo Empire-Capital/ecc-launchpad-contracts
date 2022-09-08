@@ -162,7 +162,8 @@ contract PresaleETH is Ownable, ReentrancyGuard {
     function startPresale(uint256 presaleHours) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         start = block.timestamp;
-        end = block.timestamp + (presaleHours * 1 days);
+        end = block.timestamp + (presaleHours * 1 hours);
+        status = Status.duringSale;
     }
 
     /// @dev Extends the presale

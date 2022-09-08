@@ -45,7 +45,7 @@ beforeEach(async () => {
     requireToken = (await (await ethers.getContractFactory("MockERC20")).deploy()) as MockERC20;
     await requireToken.deployed();
 
-    // Deploy LGE
+    // Deploy PresaleToken
     presaleToken = (await (await ethers.getContractFactory("PresaleToken")).deploy(depositToken.address, sellToken.address)) as PresaleToken;
     await presaleToken.deployed();
 
@@ -169,61 +169,136 @@ describe("Should deploy contract correctly", async () => {
 
 // describe("Should perform admin update variable functions correctly", async () => {
 
-//     describe("function: updateSoftCapAmount works correctly", async () => {
+    // describe("function: updateSoftCapAmount works correctly", async () => {
 
-//         it("Should ###", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(await presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
+    //     });
 
-//         });
+    //     it("Should update softCapAmount correctly", async () => {
+    //         await presaleToken.updateSoftCapAmount(1);
+    //         expect (await presaleToken.softCapAmount()).to.be.equal(1);
+    //     });
 
-//     });
+    // });
 
-//     describe("function: updateHardCapAmount works correctly", async () => {
+    // describe("function: updateHardCapAmount works correctly", async () => {
 
-//         it("Should ###", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(await presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
+    //     });
 
-//         });
+    //     it("Should update hardCapAmount correctly", async () => {
+    //         await presaleToken.updateHardCapAmount(1);
+    //         expect (await presaleToken.hardCapAmount()).to.be.equal(1);
+    //     });
 
-//     });
+    // });
    
-//     describe("function: updateSellToken works correctly", async () => {
+    // describe("function: updateSellToken works correctly", async () => {
 
-//         it("Should ###", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(await presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
+    //     });
 
-//         });
+    //     it("Should update sellToken correctly", async () => {
+    //         await presaleToken.updateSellToken("0x0000000000000000000000000000000000000000", 1);
+    //         expect (await presaleToken.sellToken()).to.be.equal("0x0000000000000000000000000000000000000000");
+    //         expect (await presaleToken.sellTokenDecimals()).to.be.equal(1);
+    //     });
 
-//     });
+    // });
 
-//     describe("function: updateSellRate works correctly", async () => {
+    // describe("function: updateSellRate works correctly", async () => {
 
-//         it("Should ###", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(await presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
+    //     });
 
-//         });
+    //     it("Should update sellRate correctly", async () => {
+    //         await presaleToken.updateSellRate(1);
+    //         expect (await presaleToken.sellRate()).to.be.equal(1);
+    //     });
 
-//     });
+    // });
 
-//     describe("function: updateMin works correctly", async () => {
+    // describe("function: updateMin works correctly", async () => {
 
-//         it("Should ###", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(await presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
+    //     });
 
-//         });
+    //     it("Should update presaleMin correctly", async () => {
+    //         await presaleToken.updateMin(1);
+    //         expect (await presaleToken.presaleMin()).to.be.equal(1);
+    //     });
 
-//     });
+    // });
    
-//     describe("function: updateRequiredToken works correctly", async () => {
+    // describe("function: updateRequiredToken works correctly", async () => {
 
-//         it("Should ###", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(await presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
+    //     });
 
-//         });
+    //     it("Should update requireToken, requireTokenAmount & requireTokenStatus correctly", async () => {
+    //         await presaleToken.updateRequiredToken(1, "0x0000000000000000000000000000000000000000", true);
+    //         expect (await presaleToken.requireTokenAmount()).to.be.equal(1);
+    //         expect (await presaleToken.requireToken()).to.be.equal("0x0000000000000000000000000000000000000000");
+    //         expect (await presaleToken.requireTokenStatus()).to.be.equal(true);
+    //     });
 
-//     });
+    // });
 
-//     describe("function: updateVestingInfo works correctly", async () => {
+    // describe("function: updateVestingInfo works correctly", async () => {
 
-//         it("Should ###", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         console.log(await presaleToken.getSaleStatus());
+    //         await expect(await presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
+    //     });
 
-//         });
+    //     it("Should should update vestingStatus, vestingPercent & vestingContract correctly", async () => {
+    //         await presaleToken.updateVestingInfo(true, 1, "0x0000000000000000000000000000000000000000");
+    //         expect(await presaleToken.vestingStatus()).to.be.equal(true);
+    //         expect(await presaleToken.vestingPercent()).to.be.equal(1);
+    //         expect(await presaleToken.vestingContract()).to.be.equal("0x0000000000000000000000000000000000000000");
+    //     });
 
-//     });
+    // });
 
 // });
 
@@ -233,4 +308,16 @@ describe("Should deploy contract correctly", async () => {
 
 //     });
     
+// });
+
+// describe("Should restrict access to onlyOwner functions to owner", async () => {
+
+//     it("Should allow owner to call onlyOwner function", async () => {
+//         await expect(presaleToken.updateSoftCapAmount(1)).to.not.be.reverted;
+//     });
+
+//     it("Should restrict non-owner to call onlyOwner function", async () => {
+//         await expect(presaleToken.connect(user).updateSoftCapAmount(1)).to.be.reverted;
+//     });
+
 // });

@@ -206,90 +206,189 @@ describe("Should deploy contract correctly", async () => {
 
 // });
 
-describe("Should perform admin update variable functions correctly", async () => {
+// describe("Should perform admin update variable functions correctly", async () => {
 
-    describe("function: updateSoftCapAmount works correctly", async () => {
+//     describe("function: updateSoftCapAmount works correctly", async () => {
 
-        it("Should only be callable when Status.beforeSale", async () => {
-            console.log(await lge.getSaleStatus());
-            await expect(lge.updateSoftCapAmount(1)).to.not.be.reverted;
-            await lge.startPresale(1);
-            console.log(await lge.getSaleStatus());
-            await expect(lge.status()).to.be.equal(0);
-            await expect(lge.updateSoftCapAmount(1)).to.be.reverted;
-        });
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             console.log(await lge.getSaleStatus());
+//             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await lge.startPresale(100);
+//             console.log(await lge.getSaleStatus());
+//             await expect(await lge.status()).to.be.equal(1);
+//             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
+//         });
 
-        it("Should ###", async () => {
+//         it("Should update softCapAmount correctly", async () => {
+//             await lge.updateSoftCapAmount(1);
+//             expect (await lge.softCapAmount()).to.be.equal(1);
+//         });
 
-        });
+//     });
 
-    });
+//     describe("function: updateHardCapAmount works correctly", async () => {
 
-    describe("function: updateHardCapAmount works correctly", async () => {
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             console.log(await lge.getSaleStatus());
+//             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await lge.startPresale(100);
+//             console.log(await lge.getSaleStatus());
+//             await expect(await lge.status()).to.be.equal(1);
+//             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
+//         });
 
-        it("Should only be callable when Status.beforeSale", async () => {
-        });
+//         it("Should update hardCapAmount correctly", async () => {
+//             await lge.updateHardCapAmount(1);
+//             expect (await lge.hardCapAmount()).to.be.equal(1);
+//         });
 
-        it("Should ###", async () => {
-
-        });
-
-    });
+//     });
    
-    describe("function: updateSellToken works correctly", async () => {
+//     describe("function: updateSellToken works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             console.log(await lge.getSaleStatus());
+//             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await lge.startPresale(100);
+//             console.log(await lge.getSaleStatus());
+//             await expect(await lge.status()).to.be.equal(1);
+//             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
+//         });
 
-        });
+//         it("Should update sellToken correctly", async () => {
+//             await lge.updateSellToken("0x0000000000000000000000000000000000000000", 1);
+//             expect (await lge.sellToken()).to.be.equal("0x0000000000000000000000000000000000000000");
+//             expect (await lge.sellTokenDecimals()).to.be.equal(1);
+//         });
 
-    });
+//     });
 
-    describe("function: updateSellRate works correctly", async () => {
+//     describe("function: updateSellRate works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             console.log(await lge.getSaleStatus());
+//             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await lge.startPresale(100);
+//             console.log(await lge.getSaleStatus());
+//             await expect(await lge.status()).to.be.equal(1);
+//             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
+//         });
 
-        });
+//         it("Should update sellRate correctly", async () => {
+//             await lge.updateSellRate(1);
+//             expect (await lge.sellRate()).to.be.equal(1);
+//         });
 
-    });
+//     });
 
-    describe("function: updateMin works correctly", async () => {
+//     describe("function: updateMin works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             console.log(await lge.getSaleStatus());
+//             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await lge.startPresale(100);
+//             console.log(await lge.getSaleStatus());
+//             await expect(await lge.status()).to.be.equal(1);
+//             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
+//         });
 
-        });
+//         it("Should update presaleMin correctly", async () => {
+//             await lge.updateMin(1);
+//             expect (await lge.presaleMin()).to.be.equal(1);
+//         });
 
-    });
+//     });
    
-    describe("function: updateRequiredToken works correctly", async () => {
+//     describe("function: updateRequiredToken works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             console.log(await lge.getSaleStatus());
+//             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await lge.startPresale(100);
+//             console.log(await lge.getSaleStatus());
+//             await expect(await lge.status()).to.be.equal(1);
+//             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
+//         });
 
-        });
+//         it("Should update requireToken, requireTokenAmount & requireTokenStatus correctly", async () => {
+//             await lge.updateRequiredToken(1, "0x0000000000000000000000000000000000000000", true);
+//             expect (await lge.requireTokenAmount()).to.be.equal(1);
+//             expect (await lge.requireToken()).to.be.equal("0x0000000000000000000000000000000000000000");
+//             expect (await lge.requireTokenStatus()).to.be.equal(true);
+//         });
 
-    });
+//     });
 
-    describe("function: updateTokenSplitPercents works correctly", async () => {
+//     describe("function: updateTokenSplitPercents works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             console.log(await lge.getSaleStatus());
+//             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await lge.startPresale(100);
+//             console.log(await lge.getSaleStatus());
+//             await expect(await lge.status()).to.be.equal(1);
+//             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
+//         });
 
-        });
+//         it("Should update ", async () => {
+//             await lge.updateTokenSplitPercents(4000, 4000, 2000);
+//             expect (await lge.liquidityPercent()).to.be.equal(4000);
+//             expect (await lge.bonusTokenPercent()).to.be.equal(4000);
+//             expect (await lge.teamPercent()).to.be.equal(2000);
+//         });
 
-    });
+//     });
 
-    describe("function: updateRaisedSplitPercents works correctly", async () => {
+//     describe("function: updateRaisedSplitPercents works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             console.log(await lge.getSaleStatus());
+//             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await lge.startPresale(100);
+//             console.log(await lge.getSaleStatus());
+//             await expect(await lge.status()).to.be.equal(1);
+//             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
+//         });
 
-        });
+//         it("Should update raisedLiqPercent, raisedTeamPercent, raisedAdminPercent correctly", async () => {
+//             await lge.updateRaisedSplitPercents(4000, 4000, 2000);
+//             expect (await lge.raisedLiqPercent()).to.be.equal(4000);
+//             expect (await lge.raisedTeamPercent()).to.be.equal(4000);
+//             expect (await lge.raisedAdminPercent()).to.be.equal(2000);
+//         });
 
-    });
+//     });
    
-    describe("function: updateLpLock works correctly", async () => {
+//     describe("function: updateLpLock works correctly", async () => {
 
-        it("Should ###", async () => {
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             console.log(await lge.getSaleStatus());
+//             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await lge.startPresale(100);
+//             console.log(await lge.getSaleStatus());
+//             await expect(await lge.status()).to.be.equal(1);
+//             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
+//         });
 
-        });
+//         it("Should update lpLockStatus, lpLockDuration & lpLockContract correctly", async () => {
+//             await lge.updateLpLock(true, 1, "0x0000000000000000000000000000000000000000");
+//             expect (await lge.lpLockStatus()).to.be.equal(true);
+//             expect (await lge.lpLockDuration()).to.be.equal(1);
+//             expect (await lge.lpLockContract()).to.be.equal("0x0000000000000000000000000000000000000000");
+//         });
 
-    });
+//     });
 
-});
+// });
+
+// describe("Should restrict access to onlyOwner functions to owner", async () => {
+
+//     it("Should allow owner to call onlyOwner function", async () => {
+//         await expect(lge.updateSoftCapAmount(1)).to.not.be.reverted;
+//     });
+
+//     it("Should restrict non-owner to call onlyOwner function", async () => {
+//         await expect(lge.connect(user).updateSoftCapAmount(1)).to.be.reverted;
+//     });
+
+// });
