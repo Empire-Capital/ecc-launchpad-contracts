@@ -142,79 +142,209 @@ describe("Should deploy contract correctly", async () => {
 
 });
 
-// describe("Should perform LGE correctly for user functions", async () => {
+describe("Should perform LGE correctly for user functions", async () => {
 
-//     describe("function: deposit works correctly", async () => {
+    describe("function: deposit works correctly", async () => {
 
-//         it("Should ###", async () => {
+        it("Should only allow deposits >= presaleMin", async () => {
 
-//         });
+        });
 
-//     });
+        it("Should not allow deposits if value will make currentDepositAmount >= hardCapAmount", async () => {
 
-//     describe("function: claim works correctly", async () => {
+        });
 
-//         it("Should ###", async () => {
+        it("Should only allow deposits duringSale", async () => {
+            await expect(lge.deposit({value: 1})).to.be.reverted;
+            await lge.startPresale(100);
+            await expect(lge.deposit({value: 300})).to.not.be.reverted;
+            await expect(await lge.status()).to.be.equal(2);
+            await lge.completePresale();
+            await expect(lge.deposit({value: 1})).to.be.reverted;
+        });
 
-//         });
+        it("Should ensure user has requireTokens if enabled", async () => {
 
-//     });
+        });
+
+        it("Should add to the currentPresaleParticipants counter if first deposit", async () => {
+
+        });
+
+        it("Should not add to the currentPresaleParticipants counter if already deposited", async () => {
+
+        });
+
+        it("Should update presaleContribution for user", async () => {
+
+        });
+        
+        it("Should update currentDepositAmount for total deposits", async () => {
+
+        });
+
+    });
+
+    describe("function: claim works correctly", async () => {
+
+        it("Should only allow claims if afterSaleSuccess", async () => {
+
+        });
+
+        it("Should only allow claims if presaleContribution[user] > 0", async () => {
+
+        });
+
+        it("Should transfer correct amount of LP to user", async () => {
+
+        });
+
+        it("Should transfer correct amount of bonus tokens if enabled", async () => {
+
+        });
+
+    });
    
-//     describe("function: claim works correctly", async () => {
+    describe("function: refund works correctly", async () => {
 
-//         it("Should ###", async () => {
+        it("Should only allow refunds if afterSaleFailure", async () => {
 
-//         });
+        });
 
-//     });
+        it("Should only allow refunds if presaleContribution[user] > 0", async () => {
 
-//     describe("function: completePresale works correctly", async () => {
+        });
+        
+        it("Should refund the same amount that the user has deposited", async () => {
 
-//         it("Should ###", async () => {
+        });
 
-//         });
+        it("Should remove from the currentPresaleParticipants counter", async () => {
 
-//     });
+        });
+    });
 
-// });
+    describe("function: completePresale works correctly", async () => {
 
-// describe("Should perform LGE correctly for admin functions", async () => {
+        it("Should only allow completePresale if duringSale", async () => {
 
-//     describe("function: startPresale works correctly", async () => {
+        });
 
-//         it("Should ###", async () => {
+        it("Should set afterSaleFailure if currentDepositAmount < softCapAmount", async () => {
 
-//         });
+        });
 
-//     });
+        it("Should return all sellToken back to projectTeamAddress if presale failure", async () => {
 
-//     describe("function: extendPresale works correctly", async () => {
+        });
 
-//         it("Should ###", async () => {
+        it("Should set afterSaleSuccess if currentDepositAmount >= softCapAmount", async () => {
 
-//         });
+        });
 
-//     });
+        it("Should set liquidityETH, teamETH and adminETH correctly", async () => {
+
+        });
+
+        it("Should set liquidityTokens, teamTokens and bonusTokens correctly", async () => {
+
+        });
+
+        it("Should create liquidity with liquitiyTokens + liquitityETH", async () => {
+
+        });
+
+        it("Should lock LP if router = empireDEX & lpLockStatus = true", async () => {
+
+        });
+
+        it("Should transfer teamTokens to projectTeamAddress if presale success ", async () => {
+
+        });
+
+        it("Should transfer teamETH allocated to projectTeamAddress", async () => {
+
+        });
+
+        it("Should transfer adminETH allocated to projectAdminAddress", async () => {
+
+        });
+
+    });
+
+});
+
+describe("Should perform LGE correctly for admin functions", async () => {
+
+    describe("function: startPresale works correctly", async () => {
+
+        it("Should only allow startPresale if beforeSale", async () => {
+
+        });
+
+        it("Should set start time as block.timestamp when function called", async () => {
+
+        });
+
+        it("Should set end time as start + the input argument of presaleHours", async () => {
+
+        });
+
+        it("Should set status as duringSale", async () => {
+
+        });
+
+    });
+
+    describe("function: extendPresale works correctly", async () => {
+
+        it("Should only allow completePresale if duringSale", async () => {
+
+        });
+
+        it("Should ensure new end time is after current end time", async () => {
+
+        });
+
+        it("Should update time correctly", async () => {
+
+        });
+
+    });
    
-//     describe("function: updateCrossChainBalances works correctly", async () => {
+    describe("function: updateCrossChainBalances works correctly", async () => {
 
-//         it("Should ###", async () => {
+        it("Should only allow completePresale if beforeSale or duringSale", async () => {
 
-//         });
+        });
 
-//     });
+        it("Should add to the currentPresaleParticipants counter if first deposit", async () => {
 
-// });
+        });
+
+        it("Should not add to the currentPresaleParticipants counter if already deposited", async () => {
+
+        });
+
+        it("Should update presaleContribution for user", async () => {
+
+        });
+        
+        it("Should update currentDepositAmount for total deposits", async () => {
+
+        });
+
+    });
+
+});
 
 // describe("Should perform admin update variable functions correctly", async () => {
 
 //     describe("function: updateSoftCapAmount works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await lge.getSaleStatus());
 //             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await lge.startPresale(100);
-//             console.log(await lge.getSaleStatus());
 //             await expect(await lge.status()).to.be.equal(1);
 //             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -229,10 +359,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateHardCapAmount works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await lge.getSaleStatus());
 //             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await lge.startPresale(100);
-//             console.log(await lge.getSaleStatus());
 //             await expect(await lge.status()).to.be.equal(1);
 //             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -247,10 +375,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateSellToken works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await lge.getSaleStatus());
 //             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await lge.startPresale(100);
-//             console.log(await lge.getSaleStatus());
 //             await expect(await lge.status()).to.be.equal(1);
 //             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -266,10 +392,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateSellRate works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await lge.getSaleStatus());
 //             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await lge.startPresale(100);
-//             console.log(await lge.getSaleStatus());
 //             await expect(await lge.status()).to.be.equal(1);
 //             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -284,10 +408,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateMin works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await lge.getSaleStatus());
 //             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await lge.startPresale(100);
-//             console.log(await lge.getSaleStatus());
 //             await expect(await lge.status()).to.be.equal(1);
 //             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -302,10 +424,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateRequiredToken works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await lge.getSaleStatus());
 //             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await lge.startPresale(100);
-//             console.log(await lge.getSaleStatus());
 //             await expect(await lge.status()).to.be.equal(1);
 //             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -322,10 +442,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateTokenSplitPercents works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await lge.getSaleStatus());
 //             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await lge.startPresale(100);
-//             console.log(await lge.getSaleStatus());
 //             await expect(await lge.status()).to.be.equal(1);
 //             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -342,10 +460,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateRaisedSplitPercents works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await lge.getSaleStatus());
 //             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await lge.startPresale(100);
-//             console.log(await lge.getSaleStatus());
 //             await expect(await lge.status()).to.be.equal(1);
 //             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -362,10 +478,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateLpLock works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await lge.getSaleStatus());
 //             await expect(lge.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await lge.startPresale(100);
-//             console.log(await lge.getSaleStatus());
 //             await expect(await lge.status()).to.be.equal(1);
 //             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
 //         });

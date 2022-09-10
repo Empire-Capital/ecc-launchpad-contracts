@@ -163,10 +163,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateSoftCapAmount works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await presaleETH.startPresale(100);
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(await presaleETH.status()).to.be.equal(1);
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -181,10 +179,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateHardCapAmount works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await presaleETH.startPresale(100);
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(await presaleETH.status()).to.be.equal(1);
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -199,10 +195,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateSellToken works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await presaleETH.startPresale(100);
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(await presaleETH.status()).to.be.equal(1);
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -218,10 +212,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateSellRate works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await presaleETH.startPresale(100);
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(await presaleETH.status()).to.be.equal(1);
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -236,10 +228,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateMin works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await presaleETH.startPresale(100);
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(await presaleETH.status()).to.be.equal(1);
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -254,10 +244,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateRequiredToken works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await presaleETH.startPresale(100);
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(await presaleETH.status()).to.be.equal(1);
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
 //         });
@@ -274,10 +262,8 @@ describe("Should deploy contract correctly", async () => {
 //     describe("function: updateVestingInfo works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
 //             await presaleETH.startPresale(100);
-//             console.log(await presaleETH.getSaleStatus());
 //             await expect(await presaleETH.status()).to.be.equal(1);
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
 //         });

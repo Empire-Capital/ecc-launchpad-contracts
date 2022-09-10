@@ -172,10 +172,8 @@ describe("Should deploy contract correctly", async () => {
     // describe("function: updateSoftCapAmount works correctly", async () => {
 
     //     it("Should only be callable when Status.beforeSale", async () => {
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
     //         await presaleToken.startPresale(100);
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(await presaleToken.status()).to.be.equal(1);
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
     //     });
@@ -190,10 +188,8 @@ describe("Should deploy contract correctly", async () => {
     // describe("function: updateHardCapAmount works correctly", async () => {
 
     //     it("Should only be callable when Status.beforeSale", async () => {
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
     //         await presaleToken.startPresale(100);
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(await presaleToken.status()).to.be.equal(1);
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
     //     });
@@ -208,10 +204,8 @@ describe("Should deploy contract correctly", async () => {
     // describe("function: updateSellToken works correctly", async () => {
 
     //     it("Should only be callable when Status.beforeSale", async () => {
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
     //         await presaleToken.startPresale(100);
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(await presaleToken.status()).to.be.equal(1);
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
     //     });
@@ -227,10 +221,8 @@ describe("Should deploy contract correctly", async () => {
     // describe("function: updateSellRate works correctly", async () => {
 
     //     it("Should only be callable when Status.beforeSale", async () => {
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
     //         await presaleToken.startPresale(100);
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(await presaleToken.status()).to.be.equal(1);
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
     //     });
@@ -245,10 +237,8 @@ describe("Should deploy contract correctly", async () => {
     // describe("function: updateMin works correctly", async () => {
 
     //     it("Should only be callable when Status.beforeSale", async () => {
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
     //         await presaleToken.startPresale(100);
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(await presaleToken.status()).to.be.equal(1);
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
     //     });
@@ -263,10 +253,8 @@ describe("Should deploy contract correctly", async () => {
     // describe("function: updateRequiredToken works correctly", async () => {
 
     //     it("Should only be callable when Status.beforeSale", async () => {
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
     //         await presaleToken.startPresale(100);
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(await presaleToken.status()).to.be.equal(1);
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
     //     });
@@ -283,10 +271,8 @@ describe("Should deploy contract correctly", async () => {
     // describe("function: updateVestingInfo works correctly", async () => {
 
     //     it("Should only be callable when Status.beforeSale", async () => {
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
     //         await presaleToken.startPresale(100);
-    //         console.log(await presaleToken.getSaleStatus());
     //         await expect(await presaleToken.status()).to.be.equal(1);
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
     //     });
@@ -302,13 +288,21 @@ describe("Should deploy contract correctly", async () => {
 
 // });
 
-// describe("Should perform function: recoverNative correctly", async () => {
+describe("Should perform function: recoverNative correctly", async () => {
 
-//     it("Should ###", async () => {
-
-//     });
+    it("Should withdraw native coin on the contract", async () => {
+        expect(await ethers.provider.getBalance(presaleToken.address)).to.equal(0);  
+        const ethForContract = ethers.utils.parseEther("1");
+        await owner.sendTransaction({
+          to: presaleToken.address,
+          value: ethForContract
+        });
+        expect(await ethers.provider.getBalance(presaleToken.address)).to.equal(ethForContract);
+        await presaleToken.recoverNative();
+        expect(await ethers.provider.getBalance(presaleToken.address)).to.equal(0);  
+    });
     
-// });
+});
 
 // describe("Should restrict access to onlyOwner functions to owner", async () => {
 
