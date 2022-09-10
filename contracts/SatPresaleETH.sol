@@ -24,7 +24,6 @@ contract SatPresaleETH is Ownable, ReentrancyGuard {
     Status public status;
 
     address public projectAdminAddress;
-    address public sellToken;
     uint256 public sellTokenDecimals;
     uint256 public currentDepositAmount;
     uint256 public currentPresaleParticipants;
@@ -41,10 +40,8 @@ contract SatPresaleETH is Ownable, ReentrancyGuard {
     mapping(address => uint256) public presaleContribution;
     mapping(uint256 => address) public userContributionAddress;
 
-    /// @param _sellToken The address of the token being sold in the presale
-    constructor(address _sellToken) {
-        sellToken = _sellToken;
-        sellTokenDecimals = IERC20(sellToken).decimals();
+    constructor() {
+        sellTokenDecimals = 18;
 
         sellRate = 1; // X sellToken per 1 depositToken
         presaleMin = 1000 * 10**18; // 1K
@@ -231,7 +228,7 @@ contract SatPresaleETH is Ownable, ReentrancyGuard {
         hardCapAmount = _hardCapAmount;
     }
 
-    /// @dev Updates the token decimals that is sold in the presale
+    /// @dev Updates the token that is sold in the presale
     /// @param _sellTokenDecimals The address of the new token to be sold
     function updateSellToken(uint256 _sellTokenDecimals) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
