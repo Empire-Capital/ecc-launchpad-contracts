@@ -7,6 +7,6 @@ contract MockERC20 is ERC20 {
     constructor() ERC20("STK", "Some Token") {
         uint8 decimals = 18;
         _setupDecimals(decimals);
-        _mint(msg.sender, 100000 * (10**uint256(decimals)));
+        _mint(msg.sender, 1000000 * (10**uint256(decimals)));
     }
 }

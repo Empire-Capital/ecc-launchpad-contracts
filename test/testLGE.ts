@@ -25,8 +25,8 @@ const sellRate = 1;
 const presaleMin = ethers.utils.parseEther("1000");
 const softCapAmount = ethers.utils.parseEther("100000");
 const hardCapAmount = ethers.utils.parseEther("125000");
-const projectTeamAddress = "0x0000000000000000000000000000000000000000";
-const projectAdminAddress = "0x0000000000000000000000000000000000000000";
+const projectTeamAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
+const projectAdminAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
 
 const requireTokenAmount = ethers.utils.parseEther("150000");
 const requireTokenAddress = "0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55";
@@ -74,269 +74,289 @@ beforeEach(async () => {
 
 });
 
-describe("Should deploy contract correctly", async () => {
+// describe("Should deploy LGE contract correctly", async () => {
 
-    it("Should set sellToken correctly", async () => {
-        expect(await lge.sellToken()).to.be.equal(sellToken.address);
-    });
+//     it("Should set sellToken correctly", async () => {
+//         expect(await lge.sellToken()).to.be.equal(sellToken.address);
+//     });
 
-    it("Should set sellTokenDecimals correctly", async () => {
-        expect(await lge.sellTokenDecimals()).to.be.equal(await sellToken.decimals());
-    });
+//     it("Should set sellTokenDecimals correctly", async () => {
+//         expect(await lge.sellTokenDecimals()).to.be.equal(await sellToken.decimals());
+//     });
 
-    it("Should set sellRate correctly", async () => {
-        expect(await lge.sellRate()).to.be.equal(sellRate);
-    });
+//     it("Should set sellRate correctly", async () => {
+//         expect(await lge.sellRate()).to.be.equal(sellRate);
+//     });
 
-    it("Should set presaleMin correctly", async () => {
-        expect(await lge.presaleMin()).to.be.equal(presaleMin);
-    });
+//     it("Should set presaleMin correctly", async () => {
+//         expect(await lge.presaleMin()).to.be.equal(presaleMin);
+//     });
 
-    it("Should set softCapAmount correctly", async () => {
-        expect(await lge.softCapAmount()).to.be.equal(softCapAmount);
-    });
+//     it("Should set softCapAmount correctly", async () => {
+//         expect(await lge.softCapAmount()).to.be.equal(softCapAmount);
+//     });
 
-    it("Should set hardCapAmount correctly", async () => {
-        expect(await lge.hardCapAmount()).to.be.equal(hardCapAmount);
-    });
+//     it("Should set hardCapAmount correctly", async () => {
+//         expect(await lge.hardCapAmount()).to.be.equal(hardCapAmount);
+//     });
 
-    it("Should set projectTeamAddress correctly", async () => {
-        expect(await lge.projectTeamAddress()).to.be.equal(projectTeamAddress);
-    });
+//     it("Should set projectTeamAddress correctly", async () => {
+//         expect(await lge.projectTeamAddress()).to.be.equal(projectTeamAddress);
+//     });
 
-    it("Should set projectAdminAddress to Empire Capital", async () => {
-        expect(await lge.projectAdminAddress()).to.be.equal(projectAdminAddress);
-    });
+//     it("Should set projectAdminAddress to Empire Capital", async () => {
+//         expect(await lge.projectAdminAddress()).to.be.equal(projectAdminAddress);
+//     });
 
-    it("Should set requireTokenAmount correctly", async () => {
-        expect(await lge.requireTokenAmount()).to.be.equal(requireTokenAmount);
-    });
+//     it("Should set requireTokenAmount correctly", async () => {
+//         expect(await lge.requireTokenAmount()).to.be.equal(requireTokenAmount);
+//     });
 
-    it("Should set requireToken correctly", async () => {
-        expect(await lge.requireToken()).to.be.equal(requireTokenAddress);
-    });
+//     it("Should set requireToken correctly", async () => {
+//         expect(await lge.requireToken()).to.be.equal(requireTokenAddress);
+//     });
 
-    it("Should set requireTokenStatus correctly", async () => {
-        expect(await lge.requireTokenStatus()).to.be.equal(requireTokenStatus);
-    });
+//     it("Should set requireTokenStatus correctly", async () => {
+//         expect(await lge.requireTokenStatus()).to.be.equal(requireTokenStatus);
+//     });
 
-    it("Should set crossChainPresale correctly", async () => {
-        expect(await lge.crossChainPresale()).to.be.equal(crossChainPresale);
-    });
+//     it("Should set crossChainPresale correctly", async () => {
+//         expect(await lge.crossChainPresale()).to.be.equal(crossChainPresale);
+//     });
    
-    it("Should set raisedLiqPercent correctly", async () => {
-        expect(await lge.raisedLiqPercent()).to.be.equal(raisedLiqPercent);
-    });
+//     it("Should set raisedLiqPercent correctly", async () => {
+//         expect(await lge.raisedLiqPercent()).to.be.equal(raisedLiqPercent);
+//     });
 
-    it("Should set raisedTeamPercent correctly", async () => {
-        expect(await lge.raisedTeamPercent()).to.be.equal(raisedTeamPercent);
-    });
+//     it("Should set raisedTeamPercent correctly", async () => {
+//         expect(await lge.raisedTeamPercent()).to.be.equal(raisedTeamPercent);
+//     });
 
-    it("Should set raisedAdminPercent correctly", async () => {
-        expect(await lge.raisedAdminPercent()).to.be.equal(raisedAdminPercent);
-    });
+//     it("Should set raisedAdminPercent correctly", async () => {
+//         expect(await lge.raisedAdminPercent()).to.be.equal(raisedAdminPercent);
+//     });
 
-    it("Should set router correctly", async () => {
-        expect(await lge.router()).to.be.equal(router);
-    });
+//     it("Should set router correctly", async () => {
+//         expect(await lge.router()).to.be.equal(router);
+//     });
 
-});
+// });
 
 describe("Should perform LGE correctly for user functions", async () => {
 
     describe("function: deposit works correctly", async () => {
 
         it("Should only allow deposits >= presaleMin", async () => {
-
+            await lge.startPresale(100);
+            await expect(lge.deposit({value: 1})).to.be.reverted;
+            await expect(lge.deposit({value: presaleMin})).to.not.be.reverted;
         });
 
         it("Should not allow deposits if value will make currentDepositAmount >= hardCapAmount", async () => {
-
+            await lge.startPresale(100);
+            await expect(lge.deposit({value: hardCapAmount})).to.not.be.reverted;
+            await expect(lge.deposit({value: 1})).to.be.reverted;
         });
 
         it("Should only allow deposits duringSale", async () => {
-            await expect(lge.deposit({value: 1})).to.be.reverted;
+            await expect(lge.deposit({value: presaleMin})).to.be.reverted;
             await lge.startPresale(100);
-            await expect(lge.deposit({value: 300})).to.not.be.reverted;
-            await expect(await lge.status()).to.be.equal(2);
+            await expect(lge.deposit({value: presaleMin})).to.not.be.reverted;
+            await expect(await lge.status()).to.be.equal(1);
             await lge.completePresale();
-            await expect(lge.deposit({value: 1})).to.be.reverted;
+            await expect(lge.deposit({value: presaleMin})).to.be.reverted;
         });
 
-        it("Should ensure user has requireTokens if enabled", async () => {
-
-        });
+        // it("Should ensure user has requireTokens if enabled", async () => {
+        //     await lge.updateRequiredToken(requireTokenAmount, requireTokenAddress, true);
+        //     await lge.startPresale(100);
+        //     await expect(lge.deposit({value: presaleMin})).to.not.be.reverted;
+        //     await expect(lge.connect(user).deposit({value: presaleMin})).to.be.reverted;
+        //     await requireToken.transfer(user.address, requireTokenAmount);
+        //     await expect(lge.connect(user).deposit({value: presaleMin})).to.not.be.reverted;
+        // });
 
         it("Should add to the currentPresaleParticipants counter if first deposit", async () => {
-
+            await lge.startPresale(100);
+            await lge.deposit({value: presaleMin});
+            expect(await lge.currentPresaleParticipants()).to.be.equal(1);
         });
 
         it("Should not add to the currentPresaleParticipants counter if already deposited", async () => {
-
+            await lge.startPresale(100);
+            await lge.deposit({value: presaleMin});
+            expect(await lge.currentPresaleParticipants()).to.be.equal(1);
+            await lge.deposit({value: presaleMin});
+            expect(await lge.currentPresaleParticipants()).to.be.equal(1);
         });
 
         it("Should update presaleContribution for user", async () => {
+            await lge.startPresale(100);
+            await lge.deposit({value: presaleMin});
+            expect(await lge.presaleContribution(owner.address)).to.be.equal(presaleMin);
 
         });
         
         it("Should update currentDepositAmount for total deposits", async () => {
-
+            await lge.startPresale(100);
+            await lge.deposit({value: presaleMin});
+            expect(await lge.currentDepositAmount()).to.be.equal(presaleMin);
         });
 
     });
 
-    describe("function: claim works correctly", async () => {
+    // describe("function: claim works correctly", async () => {
 
-        it("Should only allow claims if afterSaleSuccess", async () => {
+    //     it("Should only allow claims if afterSaleSuccess", async () => {
 
-        });
+    //     });
 
-        it("Should only allow claims if presaleContribution[user] > 0", async () => {
+    //     it("Should only allow claims if presaleContribution[user] > 0", async () => {
 
-        });
+    //     });
 
-        it("Should transfer correct amount of LP to user", async () => {
+    //     it("Should transfer correct amount of LP to user", async () => {
 
-        });
+    //     });
 
-        it("Should transfer correct amount of bonus tokens if enabled", async () => {
+    //     it("Should transfer correct amount of bonus tokens if enabled", async () => {
 
-        });
+    //     });
 
-    });
+    // });
    
-    describe("function: refund works correctly", async () => {
+    // describe("function: refund works correctly", async () => {
 
-        it("Should only allow refunds if afterSaleFailure", async () => {
+    //     it("Should only allow refunds if afterSaleFailure", async () => {
 
-        });
+    //     });
 
-        it("Should only allow refunds if presaleContribution[user] > 0", async () => {
+    //     it("Should only allow refunds if presaleContribution[user] > 0", async () => {
 
-        });
+    //     });
         
-        it("Should refund the same amount that the user has deposited", async () => {
+    //     it("Should refund the same amount that the user has deposited", async () => {
 
-        });
+    //     });
 
-        it("Should remove from the currentPresaleParticipants counter", async () => {
+    //     it("Should remove from the currentPresaleParticipants counter", async () => {
 
-        });
-    });
+    //     });
+    // });
 
-    describe("function: completePresale works correctly", async () => {
+    // describe("function: completePresale works correctly", async () => {
 
-        it("Should only allow completePresale if duringSale", async () => {
+    //     it("Should only allow completePresale if duringSale", async () => {
 
-        });
+    //     });
 
-        it("Should set afterSaleFailure if currentDepositAmount < softCapAmount", async () => {
+    //     it("Should set afterSaleFailure if currentDepositAmount < softCapAmount", async () => {
 
-        });
+    //     });
 
-        it("Should return all sellToken back to projectTeamAddress if presale failure", async () => {
+    //     it("Should return all sellToken back to projectTeamAddress if presale failure", async () => {
 
-        });
+    //     });
 
-        it("Should set afterSaleSuccess if currentDepositAmount >= softCapAmount", async () => {
+    //     it("Should set afterSaleSuccess if currentDepositAmount >= softCapAmount", async () => {
 
-        });
+    //     });
 
-        it("Should set liquidityETH, teamETH and adminETH correctly", async () => {
+    //     it("Should set liquidityETH, teamETH and adminETH correctly", async () => {
 
-        });
+    //     });
 
-        it("Should set liquidityTokens, teamTokens and bonusTokens correctly", async () => {
+    //     it("Should set liquidityTokens, teamTokens and bonusTokens correctly", async () => {
 
-        });
+    //     });
 
-        it("Should create liquidity with liquitiyTokens + liquitityETH", async () => {
+    //     it("Should create liquidity with liquitiyTokens + liquitityETH", async () => {
 
-        });
+    //     });
 
-        it("Should lock LP if router = empireDEX & lpLockStatus = true", async () => {
+    //     it("Should lock LP if router = empireDEX & lpLockStatus = true", async () => {
 
-        });
+    //     });
 
-        it("Should transfer teamTokens to projectTeamAddress if presale success ", async () => {
+    //     it("Should transfer teamTokens to projectTeamAddress if presale success ", async () => {
 
-        });
+    //     });
 
-        it("Should transfer teamETH allocated to projectTeamAddress", async () => {
+    //     it("Should transfer teamETH allocated to projectTeamAddress", async () => {
 
-        });
+    //     });
 
-        it("Should transfer adminETH allocated to projectAdminAddress", async () => {
+    //     it("Should transfer adminETH allocated to projectAdminAddress", async () => {
 
-        });
+    //     });
 
-    });
+    // });
 
 });
 
-describe("Should perform LGE correctly for admin functions", async () => {
+// describe("Should perform LGE correctly for admin functions", async () => {
 
-    describe("function: startPresale works correctly", async () => {
+//     describe("function: startPresale works correctly", async () => {
 
-        it("Should only allow startPresale if beforeSale", async () => {
+//         it("Should only allow startPresale if beforeSale", async () => {
 
-        });
+//         });
 
-        it("Should set start time as block.timestamp when function called", async () => {
+//         it("Should set start time as block.timestamp when function called", async () => {
 
-        });
+//         });
 
-        it("Should set end time as start + the input argument of presaleHours", async () => {
+//         it("Should set end time as start + the input argument of presaleHours", async () => {
 
-        });
+//         });
 
-        it("Should set status as duringSale", async () => {
+//         it("Should set status as duringSale", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-    describe("function: extendPresale works correctly", async () => {
+//     describe("function: extendPresale works correctly", async () => {
 
-        it("Should only allow completePresale if duringSale", async () => {
+//         it("Should only allow completePresale if duringSale", async () => {
 
-        });
+//         });
 
-        it("Should ensure new end time is after current end time", async () => {
+//         it("Should ensure new end time is after current end time", async () => {
 
-        });
+//         });
 
-        it("Should update time correctly", async () => {
+//         it("Should update time correctly", async () => {
 
-        });
+//         });
 
-    });
+//     });
    
-    describe("function: updateCrossChainBalances works correctly", async () => {
+//     describe("function: updateCrossChainBalances works correctly", async () => {
 
-        it("Should only allow completePresale if beforeSale or duringSale", async () => {
+//         it("Should only allow completePresale if beforeSale or duringSale", async () => {
 
-        });
+//         });
 
-        it("Should add to the currentPresaleParticipants counter if first deposit", async () => {
+//         it("Should add to the currentPresaleParticipants counter if first deposit", async () => {
 
-        });
+//         });
 
-        it("Should not add to the currentPresaleParticipants counter if already deposited", async () => {
+//         it("Should not add to the currentPresaleParticipants counter if already deposited", async () => {
 
-        });
+//         });
 
-        it("Should update presaleContribution for user", async () => {
+//         it("Should update presaleContribution for user", async () => {
 
-        });
+//         });
         
-        it("Should update currentDepositAmount for total deposits", async () => {
+//         it("Should update currentDepositAmount for total deposits", async () => {
 
-        });
+//         });
 
-    });
+//     });
 
-});
+// });
 
 // describe("Should perform admin update variable functions correctly", async () => {
 

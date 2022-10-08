@@ -58,7 +58,7 @@ contract PresaleToken is Ownable, ReentrancyGuard {
         presaleMin = 1000 * 10**depositTokenDecimals; // 1K
         softCapAmount = 100000 * 10**depositTokenDecimals; // 100K
         hardCapAmount = 125000 * 10**depositTokenDecimals; // 125K
-        projectTeamAddress = 0x0000000000000000000000000000000000000000; // team address of presale project
+        projectTeamAddress = 0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708; // team address of presale project
 
         requireTokenAmount = 150000 * 10**18; // 150K
         requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
@@ -80,7 +80,7 @@ contract PresaleToken is Ownable, ReentrancyGuard {
         uint256 value = _amount;
         address user = msg.sender;
         require(
-            value + presaleContribution[user] >= presaleMin,
+            value >= presaleMin,
             "Must deposit more than presale minimum"
         );
         require(

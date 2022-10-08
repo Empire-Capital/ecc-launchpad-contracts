@@ -21,7 +21,7 @@ const sellRate = 1;
 const presaleMin = ethers.utils.parseEther("1000");
 const softCapAmount = ethers.utils.parseEther("100000");
 const hardCapAmount = ethers.utils.parseEther("125000");
-const projectTeamAddress = "0x0000000000000000000000000000000000000000";
+const projectTeamAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
 
 const requireTokenAmount = ethers.utils.parseEther("150000");
 const requireTokenAddress = "0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55";
@@ -51,57 +51,57 @@ beforeEach(async () => {
 
 });
 
-describe("Should deploy contract correctly", async () => {
+// describe("Should deploy Presale Token contract correctly", async () => {
 
-    it("Should set depositToken correctly", async () => {
-        expect(await presaleToken.sellToken()).to.be.equal(sellToken.address);
-    });
+//     it("Should set depositToken correctly", async () => {
+//         expect(await presaleToken.sellToken()).to.be.equal(sellToken.address);
+//     });
 
-    it("Should set sellToken correctly", async () => {
-        expect(await presaleToken.sellToken()).to.be.equal(sellToken.address);
-    });
+//     it("Should set sellToken correctly", async () => {
+//         expect(await presaleToken.sellToken()).to.be.equal(sellToken.address);
+//     });
 
-    it("Should set sellTokenDecimals correctly", async () => {
-        expect(await presaleToken.sellTokenDecimals()).to.be.equal(await sellToken.decimals());
-    });
+//     it("Should set sellTokenDecimals correctly", async () => {
+//         expect(await presaleToken.sellTokenDecimals()).to.be.equal(await sellToken.decimals());
+//     });
 
-    it("Should set sellRate correctly", async () => {
-        expect(await presaleToken.sellRate()).to.be.equal(sellRate);
-    });
+//     it("Should set sellRate correctly", async () => {
+//         expect(await presaleToken.sellRate()).to.be.equal(sellRate);
+//     });
 
-    it("Should set presaleMin correctly", async () => {
-        expect(await presaleToken.presaleMin()).to.be.equal(presaleMin);
-    });
+//     it("Should set presaleMin correctly", async () => {
+//         expect(await presaleToken.presaleMin()).to.be.equal(presaleMin);
+//     });
 
-    it("Should set softCapAmount correctly", async () => {
-        expect(await presaleToken.softCapAmount()).to.be.equal(softCapAmount);
-    });
+//     it("Should set softCapAmount correctly", async () => {
+//         expect(await presaleToken.softCapAmount()).to.be.equal(softCapAmount);
+//     });
 
-    it("Should set hardCapAmount correctly", async () => {
-        expect(await presaleToken.hardCapAmount()).to.be.equal(hardCapAmount);
-    });
+//     it("Should set hardCapAmount correctly", async () => {
+//         expect(await presaleToken.hardCapAmount()).to.be.equal(hardCapAmount);
+//     });
 
-    it("Should set projectTeamAddress correctly", async () => {
-        expect(await presaleToken.projectTeamAddress()).to.be.equal(projectTeamAddress);
-    });
+//     it("Should set projectTeamAddress correctly", async () => {
+//         expect(await presaleToken.projectTeamAddress()).to.be.equal(projectTeamAddress);
+//     });
 
-    it("Should set requireTokenAmount correctly", async () => {
-        expect(await presaleToken.requireTokenAmount()).to.be.equal(requireTokenAmount);
-    });
+//     it("Should set requireTokenAmount correctly", async () => {
+//         expect(await presaleToken.requireTokenAmount()).to.be.equal(requireTokenAmount);
+//     });
 
-    it("Should set requireToken correctly", async () => {
-        expect(await presaleToken.requireToken()).to.be.equal(requireTokenAddress);
-    });
+//     it("Should set requireToken correctly", async () => {
+//         expect(await presaleToken.requireToken()).to.be.equal(requireTokenAddress);
+//     });
 
-    it("Should set requireTokenStatus correctly", async () => {
-        expect(await presaleToken.requireTokenStatus()).to.be.equal(requireTokenStatus);
-    });
+//     it("Should set requireTokenStatus correctly", async () => {
+//         expect(await presaleToken.requireTokenStatus()).to.be.equal(requireTokenStatus);
+//     });
 
-    it("Should set crossChainPresale correctly", async () => {
-        expect(await presaleToken.crossChainPresale()).to.be.equal(crossChainPresale);
-    });
+//     it("Should set crossChainPresale correctly", async () => {
+//         expect(await presaleToken.crossChainPresale()).to.be.equal(crossChainPresale);
+//     });
 
-});
+// });
 
 // describe("Should perform presale correctly for user functions", async () => {
 
@@ -288,21 +288,21 @@ describe("Should deploy contract correctly", async () => {
 
 // });
 
-describe("Should perform function: recoverNative correctly", async () => {
+// describe("Should perform function: recoverNative correctly", async () => {
 
-    it("Should withdraw native coin on the contract", async () => {
-        expect(await ethers.provider.getBalance(presaleToken.address)).to.equal(0);  
-        const ethForContract = ethers.utils.parseEther("1");
-        await owner.sendTransaction({
-          to: presaleToken.address,
-          value: ethForContract
-        });
-        expect(await ethers.provider.getBalance(presaleToken.address)).to.equal(ethForContract);
-        await presaleToken.recoverNative();
-        expect(await ethers.provider.getBalance(presaleToken.address)).to.equal(0);  
-    });
+//     it("Should withdraw native coin on the contract", async () => {
+//         expect(await ethers.provider.getBalance(presaleToken.address)).to.equal(0);  
+//         const ethForContract = ethers.utils.parseEther("1");
+//         await owner.sendTransaction({
+//           to: presaleToken.address,
+//           value: ethForContract
+//         });
+//         expect(await ethers.provider.getBalance(presaleToken.address)).to.equal(ethForContract);
+//         await presaleToken.recoverNative();
+//         expect(await ethers.provider.getBalance(presaleToken.address)).to.equal(0);  
+//     });
     
-});
+// });
 
 // describe("Should restrict access to onlyOwner functions to owner", async () => {
 
