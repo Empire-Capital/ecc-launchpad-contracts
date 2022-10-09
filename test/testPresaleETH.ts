@@ -182,38 +182,6 @@ beforeEach(async () => {
 
 // describe("Should perform admin update variable functions correctly", async () => {
 
-//     describe("function: updateSoftCapAmount works correctly", async () => {
-
-//         it("Should only be callable when Status.beforeSale", async () => {
-//             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
-//             await presaleETH.startPresale(100);
-//             await expect(await presaleETH.status()).to.be.equal(1);
-//             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
-//         });
-
-//         it("Should update softCapAmount correctly", async () => {
-//             await presaleETH.updateSoftCapAmount(1);
-//             expect (await presaleETH.softCapAmount()).to.be.equal(1);
-//         });
-
-//     });
-
-//     describe("function: updateHardCapAmount works correctly", async () => {
-
-//         it("Should only be callable when Status.beforeSale", async () => {
-//             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
-//             await presaleETH.startPresale(100);
-//             await expect(await presaleETH.status()).to.be.equal(1);
-//             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
-//         });
-
-//         it("Should update hardCapAmount correctly", async () => {
-//             await presaleETH.updateHardCapAmount(1);
-//             expect (await presaleETH.hardCapAmount()).to.be.equal(1);
-//         });
-
-//     });
-   
 //     describe("function: updateSellToken works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
@@ -247,7 +215,7 @@ beforeEach(async () => {
 
 //     });
 
-//     describe("function: updateMin works correctly", async () => {
+//     describe("function: updateMinimum works correctly", async () => {
 
 //         it("Should only be callable when Status.beforeSale", async () => {
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
@@ -256,9 +224,41 @@ beforeEach(async () => {
 //             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
 //         });
 
-//         it("Should update presaleMin correctly", async () => {
+//         it("Should update updateMinimum correctly", async () => {
 //             await presaleETH.updateMin(1);
-//             expect (await presaleETH.presaleMin()).to.be.equal(1);
+//             expect (await presaleETH.updateMinimum()).to.be.equal(1);
+//         });
+
+//     });
+
+//     describe("function: updateSoftCapAmount works correctly", async () => {
+
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await presaleETH.startPresale(100);
+//             await expect(await presaleETH.status()).to.be.equal(1);
+//             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
+//         });
+
+//         it("Should update softCapAmount correctly", async () => {
+//             await presaleETH.updateSoftCapAmount(1);
+//             expect (await presaleETH.softCapAmount()).to.be.equal(1);
+//         });
+
+//     });
+
+//     describe("function: updateHardCapAmount works correctly", async () => {
+
+//         it("Should only be callable when Status.beforeSale", async () => {
+//             await expect(presaleETH.updateSoftCapAmount(10)).to.not.be.reverted;
+//             await presaleETH.startPresale(100);
+//             await expect(await presaleETH.status()).to.be.equal(1);
+//             await expect(presaleETH.updateSoftCapAmount(10)).to.be.reverted;
+//         });
+
+//         it("Should update hardCapAmount correctly", async () => {
+//             await presaleETH.updateHardCapAmount(1);
+//             expect (await presaleETH.hardCapAmount()).to.be.equal(1);
 //         });
 
 //     });
@@ -280,6 +280,34 @@ beforeEach(async () => {
 //         });
 
 //     });
+
+    // describe("function: updatePresaleTeamAddress", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         await expect(presaleETH.updatePresaleTeamAddress(0x0)).to.not.be.reverted;
+    //         await presaleETH.startPresale(100);
+    //         await expect(presaleETH.status()).to.be.equal(1);
+    //         await expect(presaleETH.updatePresaleTeamAddress(0x0)).to.be.reverted;
+    //     });
+
+    //     it("Should update presaleTeamAddress correctly", async () => {
+    //         await presaleETH.updatePresaleTeamAddress(0x0);
+    //         expect (await presaleETH.presaleTeamAddress()).to.be.equal(0x0);
+    //     });
+    // });
+
+    // describe("function: updatePresaleAdminAddress", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         await expect(presaleETH.updatePresaleAdminAddress(0x0)).to.not.be.reverted;
+    //         await presaleETH.startPresale(100);
+    //         await expect(presaleETH.status()).to.be.equal(1);
+    //         await expect(presaleETH.updatePresaleAdminAddress(0x0)).to.be.reverted;
+    //     });
+
+    //     it("Should update presaleAdminAddress correctly", async () => {
+    //         await presaleETH.updatePresaleAdminAddress(0x0);
+    //         expect (await presaleETH.presaleAdminAddress()).to.be.equal(0x0);
+    //     });
+    // });
 
 //     describe("function: updateVestingInfo works correctly", async () => {
 

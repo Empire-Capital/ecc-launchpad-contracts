@@ -193,38 +193,6 @@ beforeEach(async () => {
 
 // describe("Should perform admin update variable functions correctly", async () => {
 
-    // describe("function: updateSoftCapAmount works correctly", async () => {
-
-    //     it("Should only be callable when Status.beforeSale", async () => {
-    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
-    //         await presaleToken.startPresale(100);
-    //         await expect(await presaleToken.status()).to.be.equal(1);
-    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
-    //     });
-
-    //     it("Should update softCapAmount correctly", async () => {
-    //         await presaleToken.updateSoftCapAmount(1);
-    //         expect (await presaleToken.softCapAmount()).to.be.equal(1);
-    //     });
-
-    // });
-
-    // describe("function: updateHardCapAmount works correctly", async () => {
-
-    //     it("Should only be callable when Status.beforeSale", async () => {
-    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
-    //         await presaleToken.startPresale(100);
-    //         await expect(await presaleToken.status()).to.be.equal(1);
-    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
-    //     });
-
-    //     it("Should update hardCapAmount correctly", async () => {
-    //         await presaleToken.updateHardCapAmount(1);
-    //         expect (await presaleToken.hardCapAmount()).to.be.equal(1);
-    //     });
-
-    // });
-   
     // describe("function: updateSellToken works correctly", async () => {
 
     //     it("Should only be callable when Status.beforeSale", async () => {
@@ -258,7 +226,7 @@ beforeEach(async () => {
 
     // });
 
-    // describe("function: updateMin works correctly", async () => {
+    // describe("function: updateMinimum works correctly", async () => {
 
     //     it("Should only be callable when Status.beforeSale", async () => {
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
@@ -268,12 +236,72 @@ beforeEach(async () => {
     //     });
 
     //     it("Should update presaleMin correctly", async () => {
-    //         await presaleToken.updateMin(1);
+    //         await presaleToken.updateMinimum(1);
     //         expect (await presaleToken.presaleMin()).to.be.equal(1);
     //     });
 
     // });
+
+    // describe("function: updateSoftCapAmount works correctly", async () => {
+
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         await expect(await presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
+    //     });
+
+    //     it("Should update softCapAmount correctly", async () => {
+    //         await presaleToken.updateSoftCapAmount(1);
+    //         expect (await presaleToken.softCapAmount()).to.be.equal(1);
+    //     });
+
+    // });
+
+    // describe("function: updateHardCapAmount works correctly", async () => {
+
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         await expect(await presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
+    //     });
+
+    //     it("Should update hardCapAmount correctly", async () => {
+    //         await presaleToken.updateHardCapAmount(1);
+    //         expect (await presaleToken.hardCapAmount()).to.be.equal(1);
+    //     });
+
+    // });
    
+    // describe("function: updatePresaleTeamAddress", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         await expect(presaleToken.updatePresaleTeamAddress(0x0)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         await expect(presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updatePresaleTeamAddress(0x0)).to.be.reverted;
+    //     });
+
+    //     it("Should update presaleTeamAddress correctly", async () => {
+    //         await presaleToken.updatePresaleTeamAddress(0x0);
+    //         expect (await presaleToken.presaleTeamAddress()).to.be.equal(0x0);
+    //     });
+    // });
+
+    // describe("function: updatePresaleAdminAddress", async () => {
+    //     it("Should only be callable when Status.beforeSale", async () => {
+    //         await expect(presaleToken.updatePresaleAdminAddress(0x0)).to.not.be.reverted;
+    //         await presaleToken.startPresale(100);
+    //         await expect(presaleToken.status()).to.be.equal(1);
+    //         await expect(presaleToken.updatePresaleAdminAddress(0x0)).to.be.reverted;
+    //     });
+
+    //     it("Should update presaleAdminAddress correctly", async () => {
+    //         await presaleToken.updatePresaleAdminAddress(0x0);
+    //         expect (await presaleToken.presaleAdminAddress()).to.be.equal(0x0);
+    //     });
+    // });
+
     // describe("function: updateRequiredToken works correctly", async () => {
 
     //     it("Should only be callable when Status.beforeSale", async () => {
