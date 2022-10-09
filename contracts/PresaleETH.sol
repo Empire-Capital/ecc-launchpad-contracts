@@ -305,10 +305,8 @@ contract PresaleETH is Ownable, ReentrancyGuard {
 
     /// @dev Updates the token that is sold in the presale
     /// @param _sellTokenAddress The address of the new token to be sold
-    function updateSellToken(
-        address _sellTokenAddress,
-        uint256 _sellTokenDecimals
-        ) public onlyOwner {
+    /// @param _sellTokenDecimals The amount of decimals for the sellToken
+    function updateSellToken(address _sellTokenAddress, uint256 _sellTokenDecimals) public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         sellToken = _sellTokenAddress;
         sellTokenDecimals = _sellTokenDecimals;
