@@ -24,13 +24,13 @@ let presaleMin = ethers.utils.parseEther("1000");
 let softCapAmount = ethers.utils.parseEther("100000");
 let hardCapAmount = ethers.utils.parseEther("125000");
 
-let requireTokenAmount = ethers.utils.parseEther("150000");
+let requireAmount = ethers.utils.parseEther("150000");
 let requireToken: MockERC20;
 let requireTokenStatus = false;
 
 let crossChainPresale = false;
 
-let projectTeamAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
+let projectTeamAddress = "0x488874e8b9C7999a853b2b2f4c1Dd8b952B3c2dB";
 
 let vestingStatus;
 let vestingPercent;
@@ -56,6 +56,23 @@ beforeEach(async () => {
     presaleToken = (await (await ethers.getContractFactory("PresaleToken")).deploy()) as PresaleToken;
     await presaleToken.deployed();
 
+    // Setup Presale
+    await presaleToken.setupPresale(
+        sellToken.address,
+        sellTokenDecimals,
+        sellRate,
+        presaleMin,
+        softCapAmount,
+        hardCapAmount,
+        requireAmount,
+        requireToken,
+        requireTokenStatus,
+        crossChainPresale,
+        projectTeamAddress,
+        vestingStatus,
+        vestingPercent,
+        vestingContract
+    )
 });
 
 // describe("Should deploy Presale Token contract correctly", async () => {
@@ -92,8 +109,8 @@ beforeEach(async () => {
 //         expect(await presaleToken.projectTeamAddress()).to.be.equal(projectTeamAddress);
 //     });
 
-//     it("Should set requireTokenAmount correctly", async () => {
-//         expect(await presaleToken.requireTokenAmount()).to.be.equal(requireTokenAmount);
+//     it("Should set requireAmount correctly", async () => {
+//         expect(await presaleToken.requireAmount()).to.be.equal(requireAmount);
 //     });
 
 //     it("Should set requireToken correctly", async () => {
@@ -266,9 +283,9 @@ beforeEach(async () => {
     //         await expect(presaleToken.updateSoftCapAmount(10)).to.be.reverted;
     //     });
 
-    //     it("Should update requireToken, requireTokenAmount & requireTokenStatus correctly", async () => {
+    //     it("Should update requireToken, requireAmount & requireTokenStatus correctly", async () => {
     //         await presaleToken.updateRequiredToken(1, "0x0000000000000000000000000000000000000000", true);
-    //         expect (await presaleToken.requireTokenAmount()).to.be.equal(1);
+    //         expect (await presaleToken.requireAmount()).to.be.equal(1);
     //         expect (await presaleToken.requireToken()).to.be.equal("0x0000000000000000000000000000000000000000");
     //         expect (await presaleToken.requireTokenStatus()).to.be.equal(true);
     //     });

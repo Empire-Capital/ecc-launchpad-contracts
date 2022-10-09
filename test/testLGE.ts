@@ -14,26 +14,26 @@ let mockEscrow: MockEscrow;
 let owner: SignerWithAddress;
 let user: SignerWithAddress;
 
-const feeToSetterAddress = '0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708';
+const feeToSetterAddress = '0x488874e8b9C7999a853b2b2f4c1Dd8b952B3c2dB';
 
 // LGE Setup Variables
 let sellToken: MockERC20;
 let sellTokenDecimals;
 let sellRate = 1;
 
-let presaleMin = ethers.utils.parseEther("1000");
-let softCapAmount = ethers.utils.parseEther("100000");
-let hardCapAmount = ethers.utils.parseEther("125000");
+let presaleMin = ethers.utils.parseEther("1");
+let softCapAmount = ethers.utils.parseEther("100");
+let hardCapAmount = ethers.utils.parseEther("125");
 
-let requireTokenAmount = ethers.utils.parseEther("150000");
+let requireAmount = ethers.utils.parseEther("150000");
 let requireToken: MockERC20;
 let requireTokenStatus = false;
 
 let crossChainPresale = false;
 let mockRouter: MockRouter;
 
-let projectTeamAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
-let projectAdminAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
+let projectTeamAddress = "0x488874e8b9C7999a853b2b2f4c1Dd8b952B3c2dB";
+let projectAdminAddress = "0x488874e8b9C7999a853b2b2f4c1Dd8b952B3c2dB";
 
 let lpLockStatus = false;
 let lpLockDuration;
@@ -79,6 +79,32 @@ beforeEach(async () => {
     lge = (await (await ethers.getContractFactory("LGE")).deploy()) as LGE;
     await lge.deployed();
 
+    // Setup LGE
+    await lge.setupPresale(
+        sellToken.address,
+        sellTokenDecimals,
+        sellRate,
+        presaleMin,
+        softCapAmount,
+        hardCapAmount,
+        requireAmount,
+        requireToken,
+        requireTokenStatus,
+        crossChainPresale,
+        mockRouter.address,
+        projectTeamAddress,
+        projectAdminAddress,
+        lpLockStatus,
+        lpLockDuration,
+        lpLockContract,
+        raisedLiqPercent,
+        raisedTeamPercent,
+        raisedAdminPercent,
+        tokenLiqPercent,
+        tokenBonusPercent,
+        tokenTeamPercent
+    );
+
 });
 
 // describe("Should deploy LGE contract correctly", async () => {
@@ -115,8 +141,8 @@ beforeEach(async () => {
 //         expect(await lge.projectAdminAddress()).to.be.equal(projectAdminAddress);
 //     });
 
-//     it("Should set requireTokenAmount correctly", async () => {
-//         expect(await lge.requireTokenAmount()).to.be.equal(requireTokenAmount);
+//     it("Should set requireAmount correctly", async () => {
+//         expect(await lge.requireAmount()).to.be.equal(requireAmount);
 //     });
 
 //     it("Should set requireToken correctly", async () => {
@@ -175,11 +201,11 @@ describe("Should perform LGE correctly for user functions", async () => {
         });
 
         // it("Should ensure user has requireTokens if enabled", async () => {
-        //     await lge.updateRequiredToken(requireTokenAmount, requireTokenAddress, true);
+        //     await lge.updateRequiredToken(requireAmount, requireTokenAddress, true);
         //     await lge.startPresale(100);
         //     await expect(lge.deposit({value: presaleMin})).to.not.be.reverted;
         //     await expect(lge.connect(user).deposit({value: presaleMin})).to.be.reverted;
-        //     await requireToken.transfer(user.address, requireTokenAmount);
+        //     await requireToken.transfer(user.address, requireAmount);
         //     await expect(lge.connect(user).deposit({value: presaleMin})).to.not.be.reverted;
         // });
 
@@ -457,9 +483,9 @@ describe("Should perform LGE correctly for user functions", async () => {
 //             await expect(lge.updateSoftCapAmount(10)).to.be.reverted;
 //         });
 
-//         it("Should update requireToken, requireTokenAmount & requireTokenStatus correctly", async () => {
+//         it("Should update requireToken, requireAmount & requireTokenStatus correctly", async () => {
 //             await lge.updateRequiredToken(1, "0x0000000000000000000000000000000000000000", true);
-//             expect (await lge.requireTokenAmount()).to.be.equal(1);
+//             expect (await lge.requireAmount()).to.be.equal(1);
 //             expect (await lge.requireToken()).to.be.equal("0x0000000000000000000000000000000000000000");
 //             expect (await lge.requireTokenStatus()).to.be.equal(true);
 //         });
