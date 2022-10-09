@@ -6,39 +6,46 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { LGE, MockFactory, MockRouter, MockWETH, MockEscrow, MockERC20, EmpireERC20 } from "../typechain";
 import { Signer, Wallet, BigNumber} from "ethers";
 
-// Typechain Setup
 let lge: LGE;
-let sellToken: MockERC20;
-let requireToken: MockERC20;
 let mockWETH: MockWETH;
 let mockFactory: MockFactory;
 let mockEscrow: MockEscrow;
-let mockRouter: MockRouter;
 
 let owner: SignerWithAddress;
 let user: SignerWithAddress;
 
-// Variables Setup
 const feeToSetterAddress = '0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708';
 
-const sellRate = 1;
-const presaleMin = ethers.utils.parseEther("1000");
-const softCapAmount = ethers.utils.parseEther("100000");
-const hardCapAmount = ethers.utils.parseEther("125000");
-const projectTeamAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
-const projectAdminAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
+// LGE Setup Variables
+let sellToken: MockERC20;
+let sellTokenDecimals;
+let sellRate = 1;
 
-const requireTokenAmount = ethers.utils.parseEther("150000");
-const requireTokenAddress = "0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55";
-const requireTokenStatus = false;
+let presaleMin = ethers.utils.parseEther("1000");
+let softCapAmount = ethers.utils.parseEther("100000");
+let hardCapAmount = ethers.utils.parseEther("125000");
 
-const raisedLiqPercent = 10000;     // 100%
-const raisedTeamPercent = 0;        // 0%
-const raisedAdminPercent = 0;       // 0%
+let requireTokenAmount = ethers.utils.parseEther("150000");
+let requireToken: MockERC20;
+let requireTokenStatus = false;
 
-const crossChainPresale = false;
+let crossChainPresale = false;
+let mockRouter: MockRouter;
 
-const router = "0xCfAA4334ec6d5bBCB597e227c28D84bC52d5B5A4";
+let projectTeamAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
+let projectAdminAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
+
+let lpLockStatus = false;
+let lpLockDuration;
+let lpLockContract;
+
+let raisedLiqPercent = 10000;     // 100%
+let raisedTeamPercent = 0;        // 0%
+let raisedAdminPercent = 0;       // 0%
+
+let tokenLiqPercent;
+let tokenBonusPercent;
+let tokenTeamPercent;
 
 beforeEach(async () => {
 
@@ -69,7 +76,7 @@ beforeEach(async () => {
     await requireToken.deployed();
 
     // Deploy LGE
-    lge = (await (await ethers.getContractFactory("LGE")).deploy(sellToken.address)) as LGE;
+    lge = (await (await ethers.getContractFactory("LGE")).deploy()) as LGE;
     await lge.deployed();
 
 });

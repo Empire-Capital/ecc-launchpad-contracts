@@ -6,27 +6,32 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { PresaleETH, MockWETH, MockERC20 } from "../typechain";
 import { Signer, Wallet, BigNumber} from "ethers";
 
-// Typechain Setup
 let presaleETH: PresaleETH;
-let sellToken: MockERC20;
-let requireToken: MockERC20;
 let weth: MockWETH;
 
 let owner: SignerWithAddress;
 let user: SignerWithAddress;
 
-// Variables Setup
-const sellRate = 1;
-const presaleMin = ethers.utils.parseEther("1000");
-const softCapAmount = ethers.utils.parseEther("100000");
-const hardCapAmount = ethers.utils.parseEther("125000");
-const projectTeamAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
+// Presale Setup Variables
+let sellToken: MockERC20;
+let sellTokenDecimals;
+let sellRate = 1;
 
-const requireTokenAmount = ethers.utils.parseEther("150000");
-const requireTokenAddress = "0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55";
-const requireTokenStatus = false;
+let presaleMin = ethers.utils.parseEther("1");
+let softCapAmount = ethers.utils.parseEther("100");
+let hardCapAmount = ethers.utils.parseEther("125");
 
-const crossChainPresale = false;
+let requireTokenAmount = ethers.utils.parseEther("150000");
+let requireToken: MockERC20;
+let requireTokenStatus = false;
+
+let crossChainPresale = false;
+
+let projectTeamAddress = "0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708";
+
+let vestingStatus;
+let vestingPercent;
+let vestingContract;
 
 beforeEach(async () => {
 
@@ -40,8 +45,8 @@ beforeEach(async () => {
     requireToken = (await (await ethers.getContractFactory("MockERC20")).deploy()) as MockERC20;
     await requireToken.deployed();
 
-    // Deploy LGE
-    presaleETH = (await (await ethers.getContractFactory("PresaleETH")).deploy(sellToken.address)) as PresaleETH;
+    // Deploy PresaleETH
+    presaleETH = (await (await ethers.getContractFactory("PresaleETH")).deploy()) as PresaleETH;
     await presaleETH.deployed();
 
 });

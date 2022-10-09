@@ -33,67 +33,82 @@ contract LGE is Ownable, ReentrancyGuard {
     }
 
     Status public status;
+    address public empireRouter = 0xCfAA4334ec6d5bBCB597e227c28D84bC52d5B5A4;
 
-    // LGE Vars
-    uint256 public raisedLiqPercent;    // 1000 = 10%
-    uint256 public raisedTeamPercent;   // 1000 = 10%
-    uint256 public raisedAdminPercent;  // 1000 = 10%
-    uint256 public liquidityPercent;    // 1000 = 10%
-    uint256 public bonusTokenPercent;   // 1000 = 10%
-    uint256 public teamPercent;         // 1000 = 10%
-    uint256 public lpCreated;
-    uint256 public bonusTokens;
-    bool public lpLockStatus;
-    uint256 public lpLockDuration;  // 0 = infinite
-    address public lpLockContract;
-    address public pair;
-
-    address public projectAdminAddress;
-    address public projectTeamAddress;
+    // LGE Setup Variables
     address public sellToken;
     uint256 public sellTokenDecimals;
-    uint256 public currentDepositAmount;
-    uint256 public currentPresaleParticipants;
-    uint256 public start;
-    uint256 public end;
+    uint256 public sellRate;
+
     uint256 public presaleMin;
     uint256 public softCapAmount;
     uint256 public hardCapAmount;
-    uint256 public sellRate;
+
     uint256 public requireTokenAmount;
     address public requireToken;
-    bool public requireTokenStatus;
-    bool public crossChainPresale;
+    bool    public requireTokenStatus;
 
+    bool    public crossChainPresale;
     IEmpireRouter public router;
 
-    address public empireRouter = 0xCfAA4334ec6d5bBCB597e227c28D84bC52d5B5A4;
+    address public projectTeamAddress;
+    address public projectAdminAddress;
 
+    bool    public lpLockStatus;
+    uint256 public lpLockDuration;  // 0 = infinite
+    address public lpLockContract;
+
+    uint256 public raisedLiqPercent;    // 1000 = 10%
+    uint256 public raisedTeamPercent;   // 1000 = 10%
+    uint256 public raisedAdminPercent;  // 1000 = 10%
+
+    uint256 public tokenLiqPercent;     // 1000 = 10%
+    uint256 public tokenBonusPercent;   // 1000 = 10%
+    uint256 public tokenTeamPercent;    // 1000 = 10%
+
+    // LGE Process Variables
+    uint256 public start;
+    uint256 public end;
+    address public pair;
+    uint256 public lpCreated;
+    uint256 public bonusTokens;
+    uint256 public currentDepositAmount;
+    uint256 public currentPresaleParticipants;
+
+    // LGE User Variables
     mapping(address => uint256) public presaleContribution;
 
-    /// @param _sellToken The address of the token being sold in the presale
-    constructor(address _sellToken) {
-        sellToken = _sellToken;
-        sellTokenDecimals = IERC20(sellToken).decimals();
+    /// @dev Can define 'Setup Variables' in constructor OR through setupPresale()
+    constructor() {
+        // sellToken = 0x0000000000000000000000000000000000000000;
+        // sellTokenDecimals = 18;
+        // sellRate = 1;
 
-        sellRate = 1; // X sellToken per 1 depositToken
-        presaleMin = 1000 * 10**18; // 1K
-        softCapAmount = 100000 * 10**18; // 100K
-        hardCapAmount = 125000 * 10**18; // 125K
-        projectTeamAddress = 0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708; // team address of presale project
-        projectAdminAddress = 0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708; // Empire Capital
+        // presaleMin = 1 * 10**18; // 1 ETH
+        // softCapAmount = 100 * 10**18; // 100 ETH
+        // hardCapAmount = 125 * 10**18; // 125 ETH
 
-        requireTokenAmount = 150000 * 10**18; // 150K
-        requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
-        requireTokenStatus = false; // false = no requirements, true = holding token required to join
+        // requireTokenAmount = 150000 * 10**18; // 150K
+        // requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
+        // requireTokenStatus = false;
 
-        raisedLiqPercent = 10000;   // 100%
-        raisedTeamPercent = 0;
-        raisedAdminPercent = 0;
+        // crossChainPresale = false;
+        // router = IEmpireRouter(0xCfAA4334ec6d5bBCB597e227c28D84bC52d5B5A4);
 
-        crossChainPresale = false; // false = presale on one chain, true = presale on multiple chains
+        // projectTeamAddress = 0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708;
+        // projectAdminAddress = 0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708;
 
-        router = IEmpireRouter(0xCfAA4334ec6d5bBCB597e227c28D84bC52d5B5A4);
+        // lpLockStatus;
+        // lpLockDuration;
+        // lpLockContract;
+
+        // raisedLiqPercent = 10000; // 1000 = 10%
+        // raisedTeamPercent;
+        // raisedAdminPercent;
+
+        // tokenLiqPercent;  // 1000 = 10%
+        // tokenBonusPercent;
+        // tokenTeamPercent;
     }
 
     receive() external payable {
@@ -143,7 +158,7 @@ contract LGE is Ownable, ReentrancyGuard {
         uint256 lpAmount = lpCreated * 100 / presaleContribution[msg.sender];
         IERC20(pair).safeTransfer(msg.sender, lpAmount);
 
-        if(bonusTokenPercent != 0) {
+        if(tokenBonusPercent != 0) {
             // Transfer bonus tokens to user
             uint256 tokenAmount = bonusTokens * 100 / presaleContribution[msg.sender];
             IERC20(sellToken).safeTransfer(msg.sender, tokenAmount);
@@ -187,9 +202,9 @@ contract LGE is Ownable, ReentrancyGuard {
             uint256 adminETH = totalETH * raisedAdminPercent / 10000;
 
             uint256 totalSellTokens = IERC20(sellToken).balanceOf(address(this));
-            uint256 liquidityTokens = totalSellTokens * liquidityPercent / 10000;
-            uint256 teamTokens = totalSellTokens * teamPercent / 10000;
-            bonusTokens = totalSellTokens * bonusTokenPercent / 10000;
+            uint256 liquidityTokens = totalSellTokens * tokenLiqPercent / 10000;
+            uint256 teamTokens = totalSellTokens * tokenTeamPercent / 10000;
+            bonusTokens = totalSellTokens * tokenBonusPercent / 10000;
 
             // create liquidity
             // internalApprove(address(this), address(router), _totalSupply); REMOVE?
@@ -338,18 +353,45 @@ contract LGE is Ownable, ReentrancyGuard {
                         ADMIN: UPDATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Updates the soft cap for the presale
-    /// @param _softCapAmount The new soft cap for the presale
-    function updateSoftCapAmount(uint256 _softCapAmount) external onlyOwner {
+    /// @dev Initializes the variables for the LGE
+    function setupPresale(
+        address _sellTokenAddress,
+        uint256 _sellTokenDecimals,
+        uint256 _sellRate,
+        uint256 _presaleMin,
+        uint256 _softCapAmount,
+        uint256 _hardCapAmount,
+        uint256 _requireAmount,
+        address _requireToken,
+        bool _requireStatus,
+        bool _crossChainPresale,
+        address _router,
+        address _teamAddress,
+        address _adminAddress,
+        bool _lpLockStatus,
+        uint256 _lpLockDuration,
+        address _lpLockContract,
+        uint256 _raisedLiqPercent,
+        uint256 _raisedTeamPercent,
+        uint256 _raisedAdminPercent,
+        uint256 _tokenLiqPercent,
+        uint256 _tokenBonusPercent,
+        uint256 _tokenTeamPercent
+    ) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
-        softCapAmount = _softCapAmount;
-    }
-
-    /// @dev Updates the hard cap for the presale
-    /// @param _hardCapAmount The new hard cap for the presale
-    function updateHardCapAmount(uint256 _hardCapAmount) external onlyOwner {
-        require(status == Status.beforeSale, "Presale is already active");
-        hardCapAmount = _hardCapAmount;
+        updateSellToken(_sellTokenAddress, _sellTokenDecimals);
+        updateSellRate(_sellRate);
+        updateMinimum(_presaleMin);
+        updateSoftCapAmount(_softCapAmount);
+        updateHardCapAmount(_hardCapAmount);
+        updateRequiredToken(_requireAmount, _requireToken, _requireStatus);
+        updateCrossChainPresale(_crossChainPresale);
+        updateRouter(_router);
+        updateProjectTeamAddress(_teamAddress);
+        updateProjectAdminAddress(_adminAddress);
+        updateLpLock(_lpLockStatus, _lpLockDuration, _lpLockContract);
+        updateRaisedSplitPercents(_raisedLiqPercent, _raisedTeamPercent, _raisedAdminPercent);
+        updateTokenSplitPercents(_tokenLiqPercent, _tokenBonusPercent, _tokenTeamPercent);
     }
 
     /// @dev Updates the token that is sold in the presale
@@ -357,7 +399,7 @@ contract LGE is Ownable, ReentrancyGuard {
     function updateSellToken(
         address _sellTokenAddress,
         uint256 _sellTokenDecimals)
-        external onlyOwner {
+        public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         sellToken = _sellTokenAddress;
         sellTokenDecimals = _sellTokenDecimals;
@@ -366,44 +408,84 @@ contract LGE is Ownable, ReentrancyGuard {
     /// @notice At sellRate = 10, then 1 depositToken returns 10 sellToken
     /// @dev Updates the sell rate between depositToken and sellToken
     /// @param _sellRate The new sellRate
-    function updateSellRate(uint256 _sellRate) external onlyOwner {
+    function updateSellRate(uint256 _sellRate) public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         sellRate = _sellRate;
     }
 
     /// @dev Updates the minimum amount of tokens needed to join the presale
-    /// @param _poolmin Thew new minimum amount of tokens
-    function updateMin(uint256 _poolmin) external onlyOwner {
+    /// @param _presaleMin The new minimum amount of tokens
+    function updateMinimum(uint256 _presaleMin) public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
-        presaleMin = _poolmin;
+        presaleMin = _presaleMin;
     }
 
-    /// @dev Changes the variables for the require token to be held to join the presale
+    /// @dev Updates the soft cap for the presale
+    /// @param _softCapAmount The new soft cap for the presale
+    function updateSoftCapAmount(uint256 _softCapAmount) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        softCapAmount = _softCapAmount;
+    }
+
+    /// @dev Updates the hard cap for the presale
+    /// @param _hardCapAmount The new hard cap for the presale
+    function updateHardCapAmount(uint256 _hardCapAmount) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        hardCapAmount = _hardCapAmount;
+    }
+
+    /// @dev Updates the variables for the require token to be held to join the presale
     /// @param _amount New amount of tokens required to be held
     /// @param _token The new token that needs to be held
     /// @param _status Toggles if there is a required token to be held
-    function updateRequiredToken(uint256 _amount, address _token, bool _status) external onlyOwner {
+    function updateRequiredToken(uint256 _amount, address _token, bool _status) public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         requireTokenAmount = _amount;
         requireToken = _token;
         requireTokenStatus = _status;
     }
 
-    /// @notice value of 100 = 1%
-    /// @dev Updates the percent values to determine how sellTokens are used in afterSaleSuccess
-    /// @param _liquidityPercent The new percent of tokens to pair with raised ETH to create liquidity
-    /// @param _bonusTokenPercent The new percent of tokens to transfer to contributors
-    /// @param _teamPercent The new percent of tokens to transfer to the team address
-    function updateTokenSplitPercents(
-        uint256 _liquidityPercent,
-        uint256 _bonusTokenPercent,
-        uint256 _teamPercent
-    ) external onlyOwner {
+    /// @dev Updates if the presale is crosschain
+    /// @param _crossChainPresale True = presale is crosschain, else is false
+    function updateCrossChainPresale(bool _crossChainPresale) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        crossChainPresale = _crossChainPresale;
+    }
+
+    /// @dev Updates the router
+    /// @param _router The address of the router
+    function updateRouter(address _router) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        router = _router;
+    }
+
+    /// @dev Updates the address of the project's team
+    /// @param _projectTeamAddress The team address of the token being sold in LGE
+    function updateProjectTeamAddress(address _projectTeamAddress) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        projectTeamAddress = _projectTeamAddress;
+    }
+
+    /// @dev Updates the address of the admin running the presale
+    /// @param _projectAdminAddress The address of the admin
+    function updateProjectAdminAddress(address _projectAdminAddress) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        projectAdminAddress = _projectAdminAddress;
+    }
+
+    /// @dev Updates the values for LP locking
+    /// @param _lpLockStatus True = LP created in LGE is locked, else is false
+    /// @param _lpLockDuration The duration to lock the LP in seconds. 0 = infinite lock
+    /// @param _lpLockContract The address of the Empire Locker contract
+    function updateLpLock(
+        bool _lpLockStatus,
+        uint256 _lpLockDuration,
+        address _lpLockContract
+        ) public onlyOwner {
         require(status == Status.beforeSale, "Presale is active");
-        require(_liquidityPercent + _bonusTokenPercent + _teamPercent == 10000, "Must total to 100%");
-        liquidityPercent = _liquidityPercent;
-        bonusTokenPercent = _bonusTokenPercent;
-        teamPercent = _teamPercent;
+        lpLockStatus = _lpLockStatus;
+        lpLockDuration = _lpLockDuration;
+        lpLockContract = _lpLockContract;
     }
 
     /// @dev Updates the percent values to determine how raised ETH is split
@@ -414,7 +496,7 @@ contract LGE is Ownable, ReentrancyGuard {
         uint256 _raisedLiqPercent,
         uint256 _raisedTeamPercent,
         uint256 _raisedAdminPercent
-    ) external onlyOwner {
+        ) public onlyOwner {
         require(status == Status.beforeSale, "Presale is active");
         require(_raisedLiqPercent + _raisedTeamPercent + _raisedAdminPercent == 10000, "Must total to 100%");
         raisedLiqPercent = _raisedLiqPercent;
@@ -422,18 +504,21 @@ contract LGE is Ownable, ReentrancyGuard {
         raisedAdminPercent = _raisedAdminPercent;
     }
 
-    /// @dev Updates the values for LP locking
-    /// @param _lpLockStatus True = LP created in LGE is locked, else is false
-    /// @param _lpLockDuration The duration to lock the LP in seconds. 0 = infinite lock
-    /// @param _lpLockContract The address of the Empire Locker contract
-    function updateLpLock(
-        bool _lpLockStatus,
-        uint256 _lpLockDuration,
-        address _lpLockContract) external onlyOwner {
+    /// @notice value of 100 = 1%
+    /// @dev Updates the percent values to determine how sellTokens are used in afterSaleSuccess
+    /// @param _tokenLiqPercent The new percent of tokens to pair with raised ETH to create liquidity
+    /// @param _tokenBonusPercent The new percent of tokens to transfer to contributors
+    /// @param _tokenTeamPercent The new percent of tokens to transfer to the team address
+    function updateTokenSplitPercents(
+        uint256 _tokenLiqPercent,
+        uint256 _tokenBonusPercent,
+        uint256 _tokenTeamPercent
+        ) public onlyOwner {
         require(status == Status.beforeSale, "Presale is active");
-        lpLockStatus = _lpLockStatus;
-        lpLockDuration = _lpLockDuration;
-        lpLockContract = _lpLockContract;
+        require(_tokenLiqPercent + _tokenBonusPercent + _tokenTeamPercent == 10000, "Must total to 100%");
+        tokenLiqPercent = _tokenLiqPercent;
+        tokenBonusPercent = _tokenBonusPercent;
+        tokenTeamPercent = _tokenTeamPercent;
     }
 
 }

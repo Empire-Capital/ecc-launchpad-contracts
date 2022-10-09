@@ -23,48 +23,63 @@ contract PresaleToken is Ownable, ReentrancyGuard {
 
     Status public status;
 
-    address public projectTeamAddress;
+    // Presale Setup Variables
     address public depositToken;
     uint256 public depositTokenDecimals;
+    
     address public sellToken;
     uint256 public sellTokenDecimals;
-    uint256 public currentDepositAmount;
-    uint256 public currentPresaleParticipants;
-    uint256 public start;
-    uint256 public end;
+    uint256 public sellRate;
+
     uint256 public presaleMin;
     uint256 public softCapAmount;
     uint256 public hardCapAmount;
-    uint256 public sellRate;
+
     uint256 public requireTokenAmount;
     address public requireToken;
     bool public requireTokenStatus;
+
     bool public crossChainPresale;
+
+    address public projectTeamAddress;
+
     bool public vestingStatus;
     uint256 public vestingPercent;
     address public vestingContract;
 
+    // Presale Process Variables
+    uint256 public start;
+    uint256 public end;
+    uint256 public currentDepositAmount;
+    uint256 public currentPresaleParticipants;
+
+    // Presale User Variables
     mapping(address => uint256) public presaleContribution;
 
-    /// @param _depositToken The address of the token required to enter the presale
-    /// @param _sellToken The address of the token being sold in the presale
-    constructor(address _depositToken, address _sellToken) {
-        depositToken = _depositToken;
-        depositTokenDecimals = IERC20(depositToken).decimals();
-        sellToken = _sellToken;
-        sellTokenDecimals = IERC20(sellToken).decimals();
+    /// @dev Can define 'Setup Variables' in constructor OR through setupPresale()
+    constructor() {
+        // depositToken = 0x0000000000000000000000000000000000000000;
+        // depositTokenDecimals = 18;
 
-        sellRate = 1; // X sellToken per 1 depositToken
-        presaleMin = 1000 * 10**depositTokenDecimals; // 1K
-        softCapAmount = 100000 * 10**depositTokenDecimals; // 100K
-        hardCapAmount = 125000 * 10**depositTokenDecimals; // 125K
-        projectTeamAddress = 0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708; // team address of presale project
+        // sellToken = 0x0000000000000000000000000000000000000000;
+        // sellTokenDecimals = 18;
+        // sellRate = 1;
 
-        requireTokenAmount = 150000 * 10**18; // 150K
-        requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
-        requireTokenStatus = false; // false = no requirements, true = holding token required to join
+        // presaleMin = 1000 * 10**depositTokenDecimals; // 1K
+        // softCapAmount = 100000 * 10**depositTokenDecimals; // 100K
+        // hardCapAmount = 125000 * 10**depositTokenDecimals; // 125K
 
-        crossChainPresale = false; // false = presale on one chain, true = presale on multiple chains
+        // requireTokenAmount = 150000 * 10**18; // 150K
+        // requireToken = 0xC84D8d03aA41EF941721A4D77b24bB44D7C7Ac55; // ECC
+        // requireTokenStatus = false;
+
+        // crossChainPresale = false;
+
+        // projectTeamAddress = 0x54CF8930796e1e0c7366c6F04D1Ea6Ad6FA5B708;
+
+        // vestingStatus = false;
+        // vestingPercent = 0;
+        // vestingContract = 0x0000000000000000000000000000000000000000;
     }
 
 
@@ -271,31 +286,38 @@ contract PresaleToken is Ownable, ReentrancyGuard {
                         ADMIN: UPDATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Updates the soft cap for the presale
-    /// @param _softCapAmount The new soft cap for the presale
-    function updateSoftCapAmount(uint256 _softCapAmount) external onlyOwner {
+    /// @dev Initializes the variables for the Presale
+    function setupPresale(
+        address _sellTokenAddress,
+        uint256 _sellTokenDecimals,
+        uint256 _sellRate,
+        uint256 _presaleMin,
+        uint256 _softCapAmount,
+        uint256 _hardCapAmount,
+        uint256 _requireAmount,
+        address _requireToken,
+        bool _requireStatus,
+        bool _crossChainPresale,
+        address _teamAddress,
+        bool _vestingStatus,
+        uint256 _vestingPercent,
+        address _vestingContract
+    ) external onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
-        softCapAmount = _softCapAmount;
-    }
-
-    /// @dev Updates the hard cap for the presale
-    /// @param _hardCapAmount The new hard cap for the presale
-    function updateHardCapAmount(uint256 _hardCapAmount) external onlyOwner {
-        require(status == Status.beforeSale, "Presale is already active");
-        hardCapAmount = _hardCapAmount;
-    }
-
-    /// @dev Updates the token that is sold in the presale
-    /// @param _sellTokenAddress The address of the new token to be sold
-    function updateSellToken(address _sellTokenAddress) external onlyOwner {
-        require(status == Status.beforeSale, "Presale is already active");
-        sellToken = _sellTokenAddress;
-        sellTokenDecimals = IERC20(sellToken).decimals();
+        updateSellToken(_sellTokenAddress, _sellTokenDecimals);
+        updateSellRate(_sellRate);
+        updateMinimum(_presaleMin);
+        updateSoftCapAmount(_softCapAmount);
+        updateHardCapAmount(_hardCapAmount);
+        updateRequiredToken(_requireAmount, _requireToken, _requireStatus);
+        updateCrossChainPresale(_crossChainPresale);
+        updateProjectTeamAddress(_teamAddress);
+        updateVestingInfo(_vestingStatus, _vestingPercent, _vestingContract);
     }
 
     /// @dev Updates the token to be deposited into the presale
     /// @param _depositToken The address of the new token to be deposited
-    function updateDepositToken(address _depositToken) external onlyOwner {
+    function updateDepositToken(address _depositToken) public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         presaleMin = presaleMin / 10**depositTokenDecimals;
         softCapAmount = softCapAmount / 10*depositTokenDecimals;
@@ -307,30 +329,66 @@ contract PresaleToken is Ownable, ReentrancyGuard {
         hardCapAmount = hardCapAmount * 10**depositTokenDecimals;
     }
 
+    /// @dev Updates the token that is sold in the presale
+    /// @param _sellTokenAddress The address of the new token to be sold
+    function updateSellToken(address _sellTokenAddress) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        sellToken = _sellTokenAddress;
+        sellTokenDecimals = IERC20(sellToken).decimals();
+    }
+
     /// @notice At sellRate = 10, then 1 depositToken returns 10 sellToken
     /// @dev Updates the sell rate between depositToken and sellToken
     /// @param _sellRate The new sellRate
-    function updateSellRate(uint256 _sellRate) external onlyOwner {
+    function updateSellRate(uint256 _sellRate) public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         sellRate = _sellRate;
     }
 
     /// @dev Updates the minimum amount of tokens needed to join the presale
-    /// @param _poolmin Thew new minimum amount of tokens
-    function updateMin(uint256 _poolmin) external onlyOwner {
+    /// @param _presaleMin The new minimum amount of tokens
+    function updateMinimum(uint256 _presaleMin) public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
-        presaleMin = _poolmin;
+        presaleMin = _presaleMin;
+    }
+
+    /// @dev Updates the soft cap for the presale
+    /// @param _softCapAmount The new soft cap for the presale
+    function updateSoftCapAmount(uint256 _softCapAmount) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        softCapAmount = _softCapAmount;
+    }
+
+    /// @dev Updates the hard cap for the presale
+    /// @param _hardCapAmount The new hard cap for the presale
+    function updateHardCapAmount(uint256 _hardCapAmount) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        hardCapAmount = _hardCapAmount;
     }
 
     /// @dev Changes The variables for the require token to be held to join the presale
     /// @param _amount New amount of tokens required to be held
     /// @param _token The new token that needs to be held
     /// @param _status Toggles if there is a required token to be held
-    function updateRequiredToken(uint256 _amount, address _token, bool _status) external onlyOwner {
+    function updateRequiredToken(uint256 _amount, address _token, bool _status) public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         requireTokenAmount = _amount;
         requireToken = _token;
         requireTokenStatus = _status;
+    }
+
+    /// @dev Updates if the presale is crosschain
+    /// @param _crossChainPresale True = presale is crosschain, else is false
+    function updateCrossChainPresale(bool _crossChainPresale) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        crossChainPresale = _crossChainPresale;
+    }
+
+    /// @dev Updates the address of the project's team
+    /// @param _projectTeamAddress The team address of the token being sold in LGE
+    function updateProjectTeamAddress(address _projectTeamAddress) public onlyOwner {
+        require(status == Status.beforeSale, "Presale is already active");
+        projectTeamAddress = _projectTeamAddress;
     }
 
     /// @dev Updates the information for vesting after a successful presale
@@ -340,7 +398,8 @@ contract PresaleToken is Ownable, ReentrancyGuard {
     function updateVestingInfo(
         bool _vestingStatus,
         uint256 _vestingPercent,
-        address _vestingContract) external onlyOwner {
+        address _vestingContract
+        ) public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
         require(_vestingPercent <= 10000, "Must be <= 100 percent");
         vestingStatus = _vestingStatus;
@@ -350,6 +409,7 @@ contract PresaleToken is Ownable, ReentrancyGuard {
 
     /// @dev Transfers any native coin stuck on the contract
     function recoverNative() external onlyOwner {
+        require(status == Status.afterSaleSuccess || status == Status.afterSaleFailure, "Presale is not over");
         payable(msg.sender).sendValue(address(this).balance);
     }
 
