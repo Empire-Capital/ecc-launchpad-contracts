@@ -269,9 +269,8 @@ contract LGE is Ownable, ReentrancyGuard {
     /// @dev Extends the presale
     /// @param _end The new end time for the presale
     function extendPresale(uint256 _end) external onlyOwner {
-        require(_end > end, "New end time must be after current end");
         require(status == Status.duringSale, "Presale must be active");
-        end = _end;
+        end += _end;
     }
 
     /// @dev Updates the amount of tokens an address contributed in the presale on another chain
@@ -454,7 +453,7 @@ contract LGE is Ownable, ReentrancyGuard {
     /// @param _router The address of the router
     function updateRouter(address _router) public onlyOwner {
         require(status == Status.beforeSale, "Presale is already active");
-        router = _router;
+        router = IEmpireRouter(_router);
     }
 
     /// @dev Updates the address of the project's team

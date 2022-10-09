@@ -183,9 +183,8 @@ contract PresaleETH is Ownable, ReentrancyGuard {
     /// @dev Extends the presale
     /// @param _end The new end time for the presale
     function extendPresale(uint256 _end) external onlyOwner {
-        require(_end > end, "New end time must be after current end");
         require(status == Status.duringSale, "Presale must be active");
-        end = _end;
+        end += _end;
     }
 
     /// @dev Updates the amount of tokens an address contributed in the presale on another chain
