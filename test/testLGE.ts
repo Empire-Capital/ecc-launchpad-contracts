@@ -146,7 +146,7 @@ describe("Should deploy LGE contract correctly", async () => {
     });
 
     it("Should set requireToken correctly", async () => {
-        expect(await lge.requireToken()).to.be.equal(requireTokenAddress);
+        expect(await lge.requireToken()).to.be.equal(requireToken.address);
     });
 
     it("Should set requireTokenStatus correctly", async () => {
@@ -170,7 +170,7 @@ describe("Should deploy LGE contract correctly", async () => {
     });
 
     it("Should set router correctly", async () => {
-        expect(await lge.router()).to.be.equal(router);
+        expect(await lge.router()).to.be.equal(mockRouter.address);
     });
 
 });
@@ -201,7 +201,7 @@ describe("Should perform LGE correctly for user functions", async () => {
         });
 
         it("Should ensure user has requireTokens if enabled", async () => {
-            await lge.updateRequiredToken(requireAmount, requireTokenAddress, true);
+            await lge.updateRequiredToken(requireAmount, requireToken.address, true);
             await lge.startPresale(100);
             await expect(lge.deposit({value: presaleMin})).to.not.be.reverted;
             await expect(lge.connect(user).deposit({value: presaleMin})).to.be.reverted;

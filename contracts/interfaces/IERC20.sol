@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Edited to include decimals()
-pragma solidity 0.8.4;
+pragma solidity 0.8.17;
 
 interface IERC20 {
 

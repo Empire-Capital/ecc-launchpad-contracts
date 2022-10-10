@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-// Updated by Empire Capital to Solidity 0.8.4 (remove SafeMath import)
+// Updated by Empire Capital to Solidity 0.8.17 (remove SafeMath import)
 
-pragma solidity 0.8.4;
+pragma solidity 0.8.17;
 
 import "./Context.sol";
 import "../interfaces/IERC20.sol";
